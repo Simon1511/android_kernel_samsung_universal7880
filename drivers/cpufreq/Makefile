@@ -38,6 +38,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_YANKACTIVE)		+= cpufreq_yankactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_BOOSTACTIVE)	+= cpufreq_boostactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_DYNAMIC_INTERACTIVE)  += cpufreq_dynamic_interactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_COMMON)		+= cpufreq_governor.o
+obj-$(CONFIG_CPU_FREQ_GOV_CHILL)	+= cpufreq_chill.o
 
 obj-$(CONFIG_CPUFREQ_DT)		+= cpufreq-dt.o
 
