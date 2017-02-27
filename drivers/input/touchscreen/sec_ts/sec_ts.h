@@ -510,6 +510,10 @@ struct sec_ts_data {
 	int (*sec_ts_write_to_string)(struct sec_ts_data *ts, unsigned short *reg, unsigned char *data, int length);
 #endif
 
+
+#ifdef CONFIG_FB
+	struct notifier_block fb_notif;
+#endif
 };
 
 struct sec_ts_plat_data {
