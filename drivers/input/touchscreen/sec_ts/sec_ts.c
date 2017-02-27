@@ -39,6 +39,11 @@
 struct sec_ts_data *tui_tsp_info;
 #endif
 
+#ifdef CONFIG_FB
+#include <linux/notifier.h>
+#include <linux/fb.h>
+#endif
+
 #ifdef CONFIG_OF
 #ifdef USE_OPEN_CLOSE
 #undef CONFIG_HAS_EARLYSUSPEND
@@ -1568,6 +1573,11 @@ static int sec_ts_setup_drv_data(struct i2c_client *client)
 	return ret;
 }
 
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+	unsigned long event, void *data);
+#endif
+
 #define T_BUFF_SIZE 5
 static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *id)
 {
@@ -1771,6 +1781,12 @@ static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	ts->early_suspend.suspend = sec_ts_early_suspend;
 	ts->early_suspend.resume = sec_ts_late_resume;
 	register_early_suspend(&ts->early_suspend);
+#endif
+
+#ifdef CONFIG_FB
+	ts->fb_notif.notifier_call = fb_notifier_callback;
+	if (fb_register_client(&ts->fb_notif))
+		pr_err("%s: could not create fb notifier\n", __func__);
 #endif
 
 #ifdef SEC_TS_SUPPORT_TA_MODE
@@ -1988,6 +2004,10 @@ static int sec_ts_remove(struct i2c_client *client)
 	ts->input_dev = NULL;
 	ts->plat_data->power(ts, false);
 
+#ifdef CONFIG_FB
+	fb_unregister_client(&ts->fb_notif);
+#endif
+
 	kfree(ts);
 	return 0;
 }
@@ -2144,6 +2164,36 @@ static int sec_ts_pm_resume(struct device *dev)
 		sec_ts_start_device(ts);
 
 	mutex_unlock(&ts->input_dev->mutex);
+
+	return 0;
+}
+
+#endif
+
+#ifdef CONFIG_FB
+static int fb_notifier_callback(struct notifier_block *self,
+				unsigned long event, void *data)
+{
+	struct fb_event *evdata = data;
+	struct sec_ts_data *tc_data = container_of(self, struct sec_ts_data, fb_notif);
+
+	if (evdata && evdata->data && event == FB_EVENT_BLANK) {
+		int *blank = evdata->data;
+		switch (*blank) {
+		case FB_BLANK_UNBLANK:
+		case FB_BLANK_NORMAL:
+		case FB_BLANK_VSYNC_SUSPEND:
+		case FB_BLANK_HSYNC_SUSPEND:
+		        sec_ts_input_open(tc_data->input_dev);
+			break;
+		case FB_BLANK_POWERDOWN:
+		        sec_ts_input_close(tc_data->input_dev);
+			break;
+		default:
+			/* Don't handle what we don't understand */
+			break;
+		}
+	}
 
 	return 0;
 }
