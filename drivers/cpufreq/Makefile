@@ -17,6 +17,7 @@ obj-$(CONFIG_CPU_FREQ_GOV_IMPULSE)	+= cpufreq_impulse.o
 obj-$(CONFIG_CPU_FREQ_GOV_INTELLIACTIVE)	+= cpufreq_intelliactive.o
 obj-$(CONFIG_CPU_FREQ_GOV_INTELLIMM)	        += cpufreq_intellimm.o
 obj-$(CONFIG_CPU_FREQ_GOV_IRONACTIVE)	+= cpufreq_ironactive.o
+obj-$(CONFIG_CPU_FREQ_GOV_LIONHEART)		+= cpufreq_lionheart.o
 obj-$(CONFIG_CPU_FREQ_GOV_PERFORMANCE)	+= cpufreq_performance.o
 obj-$(CONFIG_CPU_FREQ_GOV_POWERSAVE)	+= cpufreq_powersave.o
 obj-$(CONFIG_CPU_FREQ_GOV_USERSPACE)	+= cpufreq_userspace.o
