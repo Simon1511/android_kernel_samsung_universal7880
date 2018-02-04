@@ -508,6 +508,9 @@ extern struct cpufreq_governor cpufreq_gov_intellimm;
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_IRONACTIVE)
 extern struct cpufreq_governor cpufreq_gov_ironactive;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_ironactive)
+#elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_LIONHEART)
+extern struct cpufreq_governor cpufreq_gov_lionheart;
+#define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_lionheart)
 #elif defined(CONFIG_CPU_FREQ_DEFAULT_GOV_POWERSAVE)
 extern struct cpufreq_governor cpufreq_gov_powersave;
 #define CPUFREQ_DEFAULT_GOVERNOR	(&cpufreq_gov_powersave)
