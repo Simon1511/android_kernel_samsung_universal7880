@@ -266,6 +266,13 @@ config CPU_FREQ_DEFAULT_GOV_INTERACTIVE
 	  loading your cpufreq low-level hardware driver, using the
 	  'interactive' governor for latency-sensitive workloads.
 
+config CPU_FREQ_DEFAULT_GOV_WHEATLEY
+	bool "wheatley"
+	select CPU_FREQ_GOV_WHEATLEY
+	select CPU_FREQ_GOV_PERFORMANCE
+	---help---
+	  Use the CPUFreq governor 'wheatley' as default.
+
 config CPU_FREQ_DEFAULT_GOV_YANKACTIVE
 	bool "yankactive"
 	select CPU_FREQ_GOV_YANKACTIVE
@@ -570,6 +577,10 @@ config CPU_FREQ_GOV_SMARTMAX_EPS
 	select CPU_FREQ_TABLE
 	help
 	  'smartmax EPS' is the extreme powersaving version of smartmax
+
+config CPU_FREQ_GOV_WHEATLEY
+	tristate "'wheatley' cpufreq governor"
+	depends on CPU_FREQ	
 
 config CPU_FREQ_GOV_CONSERVATIVE
 	tristate "'conservative' cpufreq governor"
