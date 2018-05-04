@@ -33,6 +33,9 @@
 #include <linux/debugfs.h>
 #include <linux/of_gpio.h>
 #include <linux/reboot.h>
+#ifdef CONFIG_STATE_NOTIFIER
+#include <linux/state_notifier.h>
+#endif
 
 #include <media/exynos_mc.h>
 #include <video/mipi_display.h>
@@ -1366,6 +1369,11 @@ static int decon_blank(int blank_mode, struct fb_info *info)
 			decon_err("skipped to disable decon\n");
 			goto blank_exit;
 		}
+
+#ifdef CONFIG_STATE_NOTIFIER
+		state_suspend();
+#endif
+
 		break;
 	case FB_BLANK_UNBLANK:
 		DISP_SS_EVENT_LOG(DISP_EVT_UNBLANK, &decon->sd, ktime_set(0, 0));
@@ -1374,6 +1382,11 @@ static int decon_blank(int blank_mode, struct fb_info *info)
 			decon_err("skipped to enable decon\n");
 			goto blank_exit;
 		}
+
+#ifdef CONFIG_STATE_NOTIFIER
+		state_resume();
+#endif
+
 		break;
 	case FB_BLANK_VSYNC_SUSPEND:
 	case FB_BLANK_HSYNC_SUSPEND:
