@@ -3109,9 +3109,6 @@ static irqreturn_t s2mu004_muic_irq_thread(int irq, void *data)
 		pr_info("[muic] %s : skipped by water detected condition\n", __func__);
 		goto EOH;
 	} else if (irq_num == S2MU004_MUIC_IRQ2_VBUS_OFF) {
-#if defined(CONFIG_VBUS_NOTIFIER)
-		vbus_notifier_handle(STATUS_VBUS_LOW);
-#endif /* CONFIG_VBUS_NOTIFIER */
 		if (muic_data->attach_mode == S2MU004_MUIC_OTG) {
 			reg_data = s2mu004_i2c_read_byte(muic_data->i2c, 0xDA);
 			reg_data &= 0xef;
