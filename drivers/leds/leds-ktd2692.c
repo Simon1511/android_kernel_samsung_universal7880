@@ -39,17 +39,17 @@ void ktd2692_setGpio(int onoff)
 void ktd2692_set_low_bit(void)
 {
 	__gpio_set_value(global_ktd2692data->flash_control, 0);
-	udelay(T_L_LB);
+	ndelay(T_L_LB*1000);	/* 12ms */
 	__gpio_set_value(global_ktd2692data->flash_control, 1);
-	udelay(T_H_LB);
+	ndelay(T_H_LB*1000);	/* 4ms */
 }
 
 void ktd2692_set_high_bit(void)
 {
 	__gpio_set_value(global_ktd2692data->flash_control, 0);
-	udelay(T_L_HB);
+	ndelay(T_L_HB*1000);	/* 4ms */
 	__gpio_set_value(global_ktd2692data->flash_control, 1);
-	udelay(T_H_HB);
+	ndelay(T_H_HB*1000);	/* 12ms */
 }
 
 static int ktd2692_set_bit(unsigned int bit)
@@ -69,7 +69,7 @@ static int ktd2692_write_data(unsigned data)
 
 	/* Data Start Condition */
 	__gpio_set_value(global_ktd2692data->flash_control, 1);
-	udelay(T_SOD);
+	ndelay(T_SOD*1000); //15us
 
 	/* BIT 7*/
 	bit = ((data>> 7) & 0x01);
@@ -104,7 +104,7 @@ static int ktd2692_write_data(unsigned data)
 	ktd2692_set_bit(bit);
 
 	 __gpio_set_value(global_ktd2692data->flash_control, 0);
-	udelay(T_EOD_L);
+	ndelay(T_EOD_L*1000); //4us
 
 	/* Data End Condition */
 	__gpio_set_value(global_ktd2692data->flash_control, 1);
