@@ -8,6 +8,13 @@ config SECURITY_SELINUX
 	  You will also need a policy configuration and a labeled filesystem.
 	  If you are unsure how to answer this question, answer N.
 
+config SECURITY_SEC_SELINUX
+	bool "NSA Samsung SELinux"
+	depends on SECURITY_SELINUX
+	default n
+	help
+	  This option will enable Samsung SELinux code.
+
 config SECURITY_SELINUX_BOOTPARAM
 	bool "NSA SELinux boot parameter"
 	depends on SECURITY_SELINUX
@@ -64,6 +71,41 @@ config SECURITY_SELINUX_DEVELOP
 	  unless you specify enforcing=1 on the kernel command line.  You
 	  can interactively toggle the kernel between enforcing mode and
 	  permissive mode (if permitted by the policy) via /selinux/enforce.
+
+config SECURITY_SELINUX_FAKE_ENFORCE
+	bool "NSA SELinux Fake Enforcing"
+	depends on SECURITY_SELINUX
+	default n
+	help
+	  This option will make sure SELinux Status shows always as Enforcing.
+
+config SECURITY_SELINUX_ALWAYS_ENFORCE
+	bool "NSA SELinux Always Enforcing"
+	depends on SECURITY_SELINUX_DEVELOP
+	default n
+	help
+	  This option will prevent anything from setting SELinux to Permissive.
+
+config SECURITY_SELINUX_DEFAULT_ENFORCE
+	bool "NSA SELinux Default Enforcing"
+	depends on SECURITY_SELINUX_DEVELOP
+	default n
+	help
+	  This option will set SELinux to Enforcing at boot.
+
+config SECURITY_SELINUX_ALWAYS_PERMISSIVE
+	bool "NSA SELinux Always Permissive"
+	depends on SECURITY_SELINUX_DEVELOP
+	default n
+	help
+	  This option will prevent anything from setting SELinux to Enforcing.
+
+config SECURITY_SELINUX_DEFAULT_PERMISSIVE
+	bool "NSA SELinux Default Permissive"
+	depends on SECURITY_SELINUX_DEVELOP
+	default n
+	help
+	  This option will set SELinux to Permissive at boot.
 
 config SECURITY_SELINUX_AVC_STATS
 	bool "NSA SELinux AVC Statistics"
