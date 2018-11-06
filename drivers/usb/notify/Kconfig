@@ -58,7 +58,7 @@ config USB_EXTERNAL_NOTIFY
 	  Added usb external notify.
 	  The usb external notify broadcast special situation
 	  to muic and charger.
-
+	  
 config USB_NOTIFY_PROC_LOG
 	boolean "USB proc log"
 	depends on USB_NOTIFY_LAYER
