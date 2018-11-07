@@ -91,8 +91,8 @@ static int mif_min_table[] = {
 };
 
 static gpu_attribute gpu_config_attributes[] = {
-	{GPU_MAX_CLOCK, 962},
-	{GPU_MAX_CLOCK_LIMIT, 962},
+	{GPU_MAX_CLOCK, 1034},
+	{GPU_MAX_CLOCK_LIMIT, 1034},
 	{GPU_MIN_CLOCK, 343},
 	{GPU_DVFS_START_CLOCK, 343},
 	{GPU_DVFS_BL_CONFIG_CLOCK, 343},
@@ -116,7 +116,7 @@ static gpu_attribute gpu_config_attributes[] = {
 	{GPU_COLD_MINIMUM_VOL, 0},
 	{GPU_VOLTAGE_OFFSET_MARGIN, 25000},
 	{GPU_TMU_CONTROL, 1},
-	{GPU_TEMP_THROTTLING1, 962},
+	{GPU_TEMP_THROTTLING1, 1034},
 	{GPU_TEMP_THROTTLING2, 845},
 	{GPU_TEMP_THROTTLING3, 756},
 	{GPU_TEMP_THROTTLING4, 548},
