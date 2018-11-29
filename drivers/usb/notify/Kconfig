@@ -78,7 +78,6 @@ config USB_HOST_SAMSUNG_FEATURE
 config USB_HW_PARAM
     boolean "USB H/W Parameter"
     depends on USB_NOTIFY_LAYER
-    depends on USB_HOST_NOTIFY
     help
       Added USB H/W Parameter for DQA Agent.
       You need more works for USB PDIC driver.
