@@ -102,6 +102,15 @@ typedef union {
 	} unstructured_vdm;
 
 	struct {
+		unsigned data:8;
+		unsigned total_number_of_uvdm_set:4;
+		unsigned rsvd:1;
+		unsigned cmd_type:2;
+		unsigned data_type:1;
+		unsigned pid:16;
+	} sec_uvdm_header;
+
+	struct {
 		unsigned command:5;
 		unsigned:1;
 		unsigned command_type:2;
@@ -111,6 +120,19 @@ typedef union {
 		unsigned vdm_type:1;
 		unsigned svid:16;
 	} structured_vdm;
+
+	struct {
+		unsigned USB_Vendor_ID:16;
+		unsigned rsvd:10;
+		unsigned Product_Type:3;
+		unsigned Data_Capable_USB_Device:1;
+		unsigned Data_Capable_USB_Host:1;
+	} id_header_vdo;
+
+	struct {
+		unsigned Device_Version:16;
+		unsigned USB_Product_ID:16;
+	} product_vdo;
 
 	struct {
 		unsigned port_capability:2;
@@ -148,6 +170,69 @@ typedef union {
 	} vdm_svid;
 } data_obj_type;
 
+typedef union {
+	u32 object;
+	u16 word[2];
+	u8  byte[4];
+	struct {
+		unsigned vendor_defined:15;
+		unsigned vdm_type:1;
+		unsigned vendor_id:16;
+	};
+} uvdm_header;
+
+typedef union {
+	u32 object;
+	u16 word[2];
+	u8  byte[4];
+
+	struct{
+		unsigned data:8;
+		unsigned total_set_num:4;
+		unsigned direction:1;
+		unsigned cmd_type:2;
+		unsigned data_type:1;
+		unsigned pid:16;
+	};
+} s_uvdm_header;
+	
+typedef union {
+	u32 object;
+	u16 word[2];
+	u8  byte[4];
+
+	struct{
+		unsigned cur_size:8;
+		unsigned total_size:8;
+		unsigned reserved:12;
+		unsigned order_cur_set:4;
+	};
+} s_tx_header;
+
+typedef union {
+	u32 object;
+	u16 word[2];
+	u8  byte[4];
+
+	struct{
+		unsigned checksum:16;
+		unsigned reserved:16;
+	};
+} s_tx_tailer;
+
+typedef union {
+	u32 object;
+	u16 word[2];
+	u8  byte[4];
+
+	struct{
+		unsigned reserved:18;
+		unsigned result_value:2;
+		unsigned rcv_data_size:8;
+		unsigned order_cur_set:4;
+	};
+} s_rx_header;
+
 typedef enum {
 	POWER_TYPE_FIXED = 0,
 	POWER_TYPE_BATTERY,
@@ -175,7 +260,8 @@ enum usbpd_control_msg_type {
 	USBPD_PR_Swap        = 0xA,
 	USBPD_VCONN_Swap     = 0xB,
 	USBPD_Wait           = 0xC,
-	USBPD_Soft_Reset     = 0xD
+	USBPD_Soft_Reset     = 0xD,
+	USBPD_UVDM_MSG       = 0xE
 };
 
 enum usbpd_check_msg_pass {
@@ -191,6 +277,7 @@ enum usbpd_port_data_role {
 enum usbpd_port_power_role {
 	USBPD_SINK,
 	USBPD_SOURCE,
+	USBPD_DRP,
 };
 
 enum usbpd_port_vconn_role {
@@ -202,6 +289,11 @@ enum usbpd_port_role {
 	USBPD_Rp	= 0x01,
 	USBPD_Rd	= 0x01 << 1,
 	USBPD_Ra	= 0x01 << 2,
+};
+
+enum {
+	USBPD_CC_OFF,
+	USBPD_CC_ON,
 };
 
 enum vdm_command_type{

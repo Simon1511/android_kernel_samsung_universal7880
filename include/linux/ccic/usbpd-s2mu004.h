@@ -60,6 +60,9 @@
 #define S2MU004_REG_CC_OCP_SHIFT (4)
 #define S2MU004_REG_CC_OCP_MASK  (0xf << S2MU004_REG_CC_OCP_SHIFT)
 
+#define S2MU004_REG_IFG_SHIFT (4)
+#define S2MU004_REG_IFG_MASK (0xf << S2MU004_REG_IFG_SHIFT) /* 0xf0 */
+
 /* reg 0x18 */
 #define S2MU004_REG_PLUG_CTRL_MODE_SHIFT	(0)
 #define S2MU004_REG_PLUG_CTRL_RP_SEL_SHIFT	(4)
@@ -106,12 +109,15 @@
 #define S2MU004_REG_PLUG_CTRL_CC_HOLD_BIT     (0x1)
 
 /* reg 0x27 */
+#define S2MU004_REG_PLUG_CTRL_FSM_MANUAL_EN_SHIFT	(2)
 #define S2MU004_REG_PLUG_CTRL_RpRd_PLUG_SEL_SHIFT	(3)
 #define S2MU004_REG_PLUG_CTRL_VCONN_MANUAL_EN_SHIFT	(4)
 #define S2MU004_REG_PLUG_CTRL_RpRd_CC1_VCONN_SHIFT	(5)
 #define S2MU004_REG_PLUG_CTRL_RpRd_CC2_VCONN_SHIFT	(6)
 #define S2MU004_REG_PLUG_CTRL_RpRd_MANUAL_EN_SHIFT	(7)
 
+#define S2MU004_REG_PLUG_CTRL_FSM_MANUAL_EN \
+		(0x1 << S2MU004_REG_PLUG_CTRL_FSM_MANUAL_EN_SHIFT) /* 0x04 */
 #define S2MU004_REG_PLUG_CTRL_RpRd_MANUAL_MASK \
 		(0x1 << S2MU004_REG_PLUG_CTRL_RpRd_PLUG_SEL_SHIFT | \
 			0x1 << S2MU004_REG_PLUG_CTRL_RpRd_MANUAL_EN_SHIFT) /* 0x88 */
@@ -138,6 +144,11 @@
 #define S2MU004_REG_PLUG_CTRL_CC1_MANUAL_EN_SHIFT	(5)
 #define S2MU004_REG_PLUG_CTRL_CC2_MANUAL_EN_SHIFT	(6)
 
+#define S2MU004_REG_PLUG_CTRL_FSM_MANUAL_INPUT_MASK	(0xf)
+#define S2MU004_REG_PLUG_CTRL_FSM_ATTACHED_SNK		(2)
+#define S2MU004_REG_PLUG_CTRL_FSM_ATTACHED_SRC		(6)
+#define S2MU004_REG_PLUG_CTRL_CC_MANUAL_EN \
+		(0x1 << S2MU004_REG_PLUG_CTRL_CC_MANUAL_EN_SHIFT) /* 0x10 */
 #define S2MU004_REG_PLUG_CTRL_CC1_MANUAL_ON \
 		(0x1 << S2MU004_REG_PLUG_CTRL_CC_MANUAL_EN_SHIFT | \
 		0x1 << S2MU004_REG_PLUG_CTRL_CC1_MANUAL_EN_SHIFT) /* 0x30 */
@@ -148,6 +159,12 @@
 		(0x1 << S2MU004_REG_PLUG_CTRL_CC_MANUAL_EN_SHIFT | \
 		0x1 << S2MU004_REG_PLUG_CTRL_CC1_MANUAL_EN_SHIFT | \
 		0x1 << S2MU004_REG_PLUG_CTRL_CC2_MANUAL_EN_SHIFT) /* 0x70 */
+
+/* reg 0x2E */
+#define S2MU004_REG_PLUG_CTRL_VDM_DISABLE_SHIFT		(1)
+
+#define S2MU004_REG_PLUG_CTRL_VDM_DISABLE \
+		(0x1 << S2MU004_REG_PLUG_CTRL_VDM_DISABLE_SHIFT) /* 0x02 */
 
 /* reg 0x90 (For S2MU004_REG_MSG_SEND_CON) */
 #define S2MU004_REG_MSG_SEND_CON_SEND_MSG_EN_SHIFT	(0)
@@ -196,6 +213,7 @@
 		| 1 << S2MU004_PDIC_PLUG_ATTACH_DONE_SHIFT) /* 0x0A */
 #define S2MU004_PDIC_ATTACH_MASK (1 << S2MU004_PDIC_PLUG_ATTACH_DONE_SHIFT) /* 0x02 */
 #define S2MU004_PR_MASK (S2MU004_PDIC_SINK | S2MU004_PDIC_SOURCE) /* 0x0E */
+
 /* reg 0xF7 */
 #define S2MU004_REG_ETC_SOFT_RESET_EN_SHIFT	(1)
 #define S2MU004_REG_ETC_SOFT_RESET_EN \
@@ -251,6 +269,7 @@
 
 /* reg 0xE5 */
 #define S2MU004_REG_INT_STATUS5_HARD_RESET     (1<<2)
+#define S2MU004_REG_INT_STATUS5_SOP_PRIME     (1<<6)
 
 /* interrupt for checking message */
 #define ENABLED_INT_0	(S2MU004_REG_INT_STATUS0_MSG_ACCEPT)
@@ -275,6 +294,7 @@
 enum s2mu004_usbpd_reg {
 	S2MU004_REG_PD_CTRL		    = 0x01,
 	S2MU004_REG_PD_CTRL_2		    = 0x02,
+	S2MU004_REG_PHY_CTRL_IFG	    = 0x13,
 	S2MU004_REG_PLUG_CTRL_PORT          = 0x18,
 	S2MU004_REG_PLUG_CTRL_MSG           = 0x19,
 	S2MU004_REG_PLUG_CTRL_SET_RD        = 0x1E,
@@ -355,6 +375,7 @@ typedef enum {
 	S2MU004_THRESHOLD_621MV = 18,
 	S2MU004_THRESHOLD_642MV = 19,
 	S2MU004_THRESHOLD_685MV = 20,
+	S2MU004_THRESHOLD_1000MV = 27,
 
 	S2MU004_THRESHOLD_1328MV = 35,
 	S2MU004_THRESHOLD_1371MV = 36,
@@ -384,25 +405,31 @@ typedef enum {
 } CCIC_THRESHOLD_SEL;
 
 typedef enum {
-        S2MU004_CC_OCP_255MV = 0,
-        S2MU004_CC_OCP_262MV = 1,
-        S2MU004_CC_OCP_273MV = 2,
-        S2MU004_CC_OCP_282MV = 3,
-        S2MU004_CC_OCP_301MV = 4,
-        S2MU004_CC_OCP_311MV = 5,
-        S2MU004_CC_OCP_327MV = 6,
-        S2MU004_CC_OCP_339MV = 7,
-        S2MU004_CC_OCP_375MV = 8,
-        S2MU004_CC_OCP_390MV = 9,
-        S2MU004_CC_OCP_415MV = 10,
-        S2MU004_CC_OCP_433MV = 11,
-        S2MU004_CC_OCP_478MV = 12,
-        S2MU004_CC_OCP_502MV = 13,
-        S2MU004_CC_OCP_542MV = 14,
-        S2MU004_CC_OCP_575MV = 15,
+	S2MU004_CC_OCP_255MV = 0,
+	S2MU004_CC_OCP_262MV = 1,
+	S2MU004_CC_OCP_273MV = 2,
+	S2MU004_CC_OCP_282MV = 3,
+	S2MU004_CC_OCP_301MV = 4,
+	S2MU004_CC_OCP_311MV = 5,
+	S2MU004_CC_OCP_327MV = 6,
+	S2MU004_CC_OCP_339MV = 7,
+	S2MU004_CC_OCP_375MV = 8,
+	S2MU004_CC_OCP_390MV = 9,
+	S2MU004_CC_OCP_415MV = 10,
+	S2MU004_CC_OCP_433MV = 11,
+	S2MU004_CC_OCP_478MV = 12,
+	S2MU004_CC_OCP_502MV = 13,
+	S2MU004_CC_OCP_542MV = 14,
+	S2MU004_CC_OCP_575MV = 15,
 
-        S2MU004_CC_OCP_MAX   = 16
+	S2MU004_CC_OCP_MAX   = 16
 } CCIC_CC_OCP_SEL;
+
+typedef enum {
+	S2MU004_PHY_IFG_25US = 0,
+	S2MU004_PHY_IFG_30US = 1,
+	S2MU004_PHY_IFG_35US = 2,
+} CCIC_PHY_IFG_SEL;
 
 enum s2mu004_power_role {
 	PDIC_SINK,
@@ -477,6 +504,7 @@ struct s2mu004_usbpd_data {
 	struct mutex _mutex;
 	struct mutex poll_mutex;
 	struct mutex lpm_mutex;
+	struct mutex cc_mutex;
 	int vconn_en;
 	int regulator_en;
 	int irq_gpio;
@@ -494,6 +522,7 @@ struct s2mu004_usbpd_data {
 	bool is_muic_water_detect;
 	bool is_otg_vboost;
 	bool is_otg_reboost;
+	bool is_pr_swap;
 	int water_detect_cnt;
 	int check_msg_pass;
 	int rid;
@@ -502,6 +531,7 @@ struct s2mu004_usbpd_data {
 	int data_role_dual; /* data_role for dual role swap */
 	int power_role_dual; /* power_role for dual role swap */
 	int is_attached;
+	u8 rp_currentlvl; 
 #if defined(CONFIG_DUAL_ROLE_USB_INTF)
 	struct dual_role_phy_instance *dual_role;
 	struct dual_role_phy_desc *desc;

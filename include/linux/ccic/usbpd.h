@@ -13,7 +13,7 @@
 /* Counter */
 #define USBPD_nMessageIDCount		(7)
 #define USBPD_nRetryCount		(3)
-#define USBPD_nHardResetCount		(2)
+#define USBPD_nHardResetCount		(4)
 #define USBPD_nCapsCount		(16)
 #define USBPD_nDiscoverIdentityCount	(20)
 
@@ -28,7 +28,7 @@
 #define tSinkWaitCap		(2500)	/* 2.1~2.5 s  */
 #define tPSTransition		(5500)	/* 450~550 ms */
 #define tVCONNSourceOn		(100)	/* 24~30 ms */
-#define tVDMSenderResponse	(30)	/* 24~30 ms */
+#define tVDMSenderResponse	(50)	/* 24~30 ms */
 #define tVDMWaitModeEntry	(50)	/* 40~50  ms */
 #define tVDMWaitModeExit	(50)    /* 40~50  ms */
 #define tDiscoverIdentity	(50)	/* 40~50  ms */
@@ -184,6 +184,10 @@ typedef enum {
 	PE_VCS_Send_Swap		= 0xC6,
 	PE_VCS_Reject_VCONN_Swap	= 0xC7,
 
+	/* UVDM Message */
+	PE_DFP_UVDM_Send_Message	= 0xD0,
+	PE_DFP_UVDM_Receive_Message	= 0xD1,
+
 	Error_Recovery			= 0xFF
 } policy_state;
 
@@ -203,6 +207,8 @@ typedef enum usbpd_manager_command {
 	MANAGER_REQ_VDM_STATUS_UPDATE		= 13,
 	MANAGER_REQ_VDM_DisplayPort_Configure	= 14,
 	MANAGER_REQ_NEW_POWER_SRC		= 15,
+	MANAGER_REQ_UVDM_SEND_MESSAGE		= 16,
+	MANAGER_REQ_UVDM_RECEIVE_MESSAGE		= 17,
 } usbpd_manager_command_type;
 
 typedef enum usbpd_manager_event {
@@ -222,6 +228,8 @@ typedef enum usbpd_manager_event {
 	MANAGER_DisplayPort_Configure_ACKED	= 13,
 	MANAGER_DisplayPort_Configure_NACKED	= 14,
 	MANAGER_NEW_POWER_SRC		= 15,
+	MANAGER_UVDM_SEND_MESSAGE		= 16,
+	MANAGER_UVDM_RECEIVE_MESSAGE		= 17,
 } usbpd_manager_event_type;
 
 enum usbpd_msg_status {
@@ -253,7 +261,7 @@ enum usbpd_msg_status {
 	PLUG_ATTACH		= 1<<25,
 	MSG_HARDRESET		= 1<<26,
 	CC_DETECT		= 1<<27,
-	PLUG_WAKEUP		= 1<<28,
+	UVDM_MSG		= 1<<28,
 	MSG_PASS		= 1<<29,
 	MSG_RID			= 1<<30,
 	MSG_NONE		= 1<<31,
@@ -314,6 +322,7 @@ typedef struct usbpd_phy_ops {
 	bool   (*poll_status)(void *);
 	void   (*driver_reset)(void *);
 	int    (*set_otg_control)(void *, int);
+	int    (*set_cc_control)(void *, int);
 } usbpd_phy_ops_type;
 
 struct policy_data {
@@ -353,7 +362,10 @@ struct usbpd_manager_data {
 	usbpd_manager_command_type cmd;  /* request to policy engine */
 	usbpd_manager_event_type   event;    /* policy engine infromed */
 
-	int test_cnt; /* for test */
+	msg_header_type		uvdm_msg_header;
+	data_obj_type		uvdm_data_obj[USBPD_MAX_COUNT_MSG_OBJECT];
+
+	int alt_sended;
 	/* request */
 	int	max_power;
 	int	op_power;
@@ -383,8 +395,24 @@ struct usbpd_manager_data {
 	bool data_role_swap;
 	bool vconn_source_swap;
 
+#if 1
+	bool uvdm_first_req;
+	bool uvdm_dir;
+	struct completion uvdm_out_wait;
+	struct completion uvdm_in_wait;
+#endif
+	uint16_t Vendor_ID;
+	uint16_t Product_ID;
+	uint16_t Device_Version;
+	int acc_type;
+	uint16_t SVID_0;
+	uint16_t SVID_1;
+	uint16_t Standard_Vendor_ID;
+
 	struct usbpd_data *pd_data;
+	struct delayed_work	acc_detach_handler;
 	muic_attached_dev_t	attached_dev;
+	int is_samsung_accessory_enter_mode;
 };
 
 struct usbpd_data {
@@ -435,6 +463,7 @@ extern void  usbpd_init_manager_val(struct usbpd_data *);
 extern int  usbpd_init_manager(struct usbpd_data *);
 extern void usbpd_manager_plug_attach(struct device *, muic_attached_dev_t);
 extern void usbpd_manager_plug_detach(struct device *dev, bool notify);
+extern void usbpd_manager_acc_detach(struct device *dev);
 extern int  usbpd_manager_match_request(struct usbpd_data *);
 extern bool usbpd_manager_power_role_swap(struct usbpd_data *);
 extern bool usbpd_manager_vconn_source_swap(struct usbpd_data *);
@@ -446,14 +475,15 @@ extern bool usbpd_manager_data_role_swap(struct usbpd_data *);
 extern int usbpd_manager_get_identity(struct usbpd_data *);
 extern int usbpd_manager_get_svids(struct usbpd_data *);
 extern int usbpd_manager_get_modes(struct usbpd_data *);
-extern int usbpd_manager_enter_mode(struct usbpd_data *, unsigned mode, u32);
+extern int usbpd_manager_enter_mode(struct usbpd_data *);
 extern int usbpd_manager_exit_mode(struct usbpd_data *, unsigned mode);
 extern void usbpd_manager_inform_event(struct usbpd_data *,
 		usbpd_manager_event_type);
 extern int usbpd_manager_evaluate_capability(struct usbpd_data *);
 extern data_obj_type usbpd_manager_select_capability(struct usbpd_data *);
 extern bool usbpd_manager_vdm_request_enabled(struct usbpd_data *);
-
+extern void usbpd_manager_acc_handler_cancel(struct device *);
+extern void usbpd_manager_acc_detach_handler(struct work_struct *);
 extern void usbpd_policy_work(struct work_struct *);
 extern void usbpd_protocol_tx(struct usbpd_data *);
 extern void usbpd_protocol_rx(struct usbpd_data *);
@@ -472,4 +502,6 @@ extern unsigned usbpd_wait_msg(struct usbpd_data *pd_data, unsigned msg_status,
 		unsigned ms);
 extern void usbpd_reinit(struct device *);
 extern void usbpd_init_protocol(struct usbpd_data *);
+//int samsung_uvdm_in_request_message(void *data);
+//ssize_t samsung_uvdm_out_request_message(void *data, size_t size);
 #endif

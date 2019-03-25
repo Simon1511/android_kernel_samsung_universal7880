@@ -35,8 +35,11 @@
 #include <linux/mfd/samsung/s2mu004.h>
 #include <linux/mfd/samsung/s2mu004-private.h>
 #include <linux/muic/s2mu004-muic.h>
+#if defined(CONFIG_BATTERY_SAMSUNG_V2)
+#include "../battery_v2/include/sec_charging_common.h"
+#else
 #include <linux/battery/sec_charging_common.h>
-
+#endif
 #if defined(CONFIG_CCIC_S2MU004)
 #include <linux/ccic/usbpd-s2mu004.h>
 #endif
@@ -1056,6 +1059,9 @@ static ssize_t s2mu004_muic_set_afc_disable(struct device *dev,
 	int data = 0;
 	bool curr_val = pdata->afc_disable;
 	int param_val, ret = 0;
+#if defined(CONFIG_HV_MUIC_VOLTAGE_CTRL) || defined(CONFIG_SUPPORT_QC30)
+	union power_supply_propval psy_val;
+#endif
 
 	mutex_lock(&muic_data->muic_mutex);
 
@@ -1068,6 +1074,11 @@ static ssize_t s2mu004_muic_set_afc_disable(struct device *dev,
 	}
 
 	param_val = pdata->afc_disable ? '1' : '0';
+#if defined(CONFIG_HV_MUIC_VOLTAGE_CTRL) || defined(CONFIG_SUPPORT_QC30)
+	psy_val.intval = param_val;
+	psy_do_property("battery", set,
+		POWER_SUPPLY_EXT_PROP_HV_DISABLE, psy_val);
+#endif
 
 #ifdef CONFIG_SEC_PARAM
 	if ((ret = sec_set_param(CM_OFFSET + 1, (char)param_val)) < 0) {

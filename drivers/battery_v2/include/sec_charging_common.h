@@ -49,9 +49,16 @@ enum power_supply_ext_property {
 	POWER_SUPPLY_EXT_PROP_FUELGAUGE_RESET,
 	POWER_SUPPLY_EXT_PROP_FACTORY_VOLTAGE_REGULATION,
 	POWER_SUPPLY_EXT_PROP_ANDIG_IVR_SWITCH,
+	POWER_SUPPLY_EXT_PROP_HV_DISABLE,
 #if defined(CONFIG_FUELGAUGE_S2MU004)
 	POWER_SUPPLY_EXT_PROP_UPDATE_BATTERY_DATA,
 #endif
+};
+
+enum sec_battery_rp_curr {
+	RP_CURRENT_RP1 = 500,
+	RP_CURRENT_RP2 = 1500,
+	RP_CURRENT_RP3 = 3000,
 };
 
 enum power_supply_ext_health {
@@ -822,6 +829,11 @@ struct sec_battery_platform_data {
 	int siop_wireless_charging_limit_current;
 	int siop_hv_wireless_input_limit_current;
 	int siop_hv_wireless_charging_limit_current;
+
+	int default_input_current;
+	int default_charging_current;
+	int default_usb_input_current;
+ 	int default_usb_charging_current;
 	int max_input_voltage;
 	int max_input_current;
 	int pre_afc_work_delay;
