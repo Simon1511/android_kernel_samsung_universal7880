@@ -32,6 +32,32 @@
 #endif /* CONFIG_CPU_THERMAL_IPA */
 #include "gpu_custom_interface.h"
 
+#if defined (CONFIG_SOC_EXYNOS7870) && defined(CONFIG_PWRCAL)
+#include <linux/apm-exynos.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
+#include <mach/pm_domains-cal.h>
+#include <../pwrcal/S5E7870/S5E7870-vclk.h>
+#include <mach/asv-exynos.h>
+#else
+#include <soc/samsung/pm_domains-cal.h>
+#include <S5E7870/S5E7870-vclk.h>
+#include <soc/samsung/asv-exynos.h>
+#endif
+#elif defined (CONFIG_SOC_EXYNOS7880) && defined(CONFIG_PWRCAL)
+#include <linux/apm-exynos.h>
+#if LINUX_VERSION_CODE < KERNEL_VERSION(3, 17, 0)
+#include <mach/pm_domains-cal.h>
+#include <../pwrcal/S5E7880/S5E7880-vclk.h>
+#include <mach/asv-exynos.h>
+#else
+#include <soc/samsung/pm_domains-cal.h>
+#include <S5E7880/S5E7880-vclk.h>
+#include <soc/samsung/asv-exynos.h>
+#endif
+#else
+#include <mach/apm-exynos.h>
+#endif
+
 extern struct kbase_device *pkbdev;
 
 int gpu_pmqos_dvfs_min_lock(int level)
@@ -63,13 +89,21 @@ static ssize_t show_clock(struct device *dev, struct device_attribute *attr, cha
 	if (!platform)
 		return -ENODEV;
 
+#ifdef CONFIG_MALI_RT_PM
+	if (platform->exynos_pm_domain) {
+		mutex_lock(&platform->exynos_pm_domain->access_lock);
+		if(!platform->dvs_is_enabled && gpu_is_power_on())
+			clock = gpu_get_cur_clock(platform);
+		mutex_unlock(&platform->exynos_pm_domain->access_lock);
+	}
+#else
 	if (gpu_control_is_power_on(pkbdev) == 1) {
 		mutex_lock(&platform->gpu_clock_lock);
 		if (!platform->dvs_is_enabled)
 			clock = gpu_get_cur_clock(platform);
 		mutex_unlock(&platform->gpu_clock_lock);
 	}
-
+#endif
 	ret += snprintf(buf+ret, PAGE_SIZE-ret, "%d", clock);
 
 	if (ret < PAGE_SIZE - 1) {
@@ -1721,13 +1755,21 @@ static ssize_t show_kernel_sysfs_clock(struct kobject *kobj, struct kobj_attribu
 	if (!platform)
 		return -ENODEV;
 
+#ifdef CONFIG_MALI_RT_PM
+	if (platform->exynos_pm_domain) {
+		mutex_lock(&platform->exynos_pm_domain->access_lock);
+		if (!platform->dvs_is_enabled && gpu_is_power_on())
+			clock = gpu_get_cur_clock(platform);
+		mutex_unlock(&platform->exynos_pm_domain->access_lock);
+	}
+#else
 	if (gpu_control_is_power_on(pkbdev) == 1) {
 		mutex_lock(&platform->gpu_clock_lock);
 		if (!platform->dvs_is_enabled)
 			clock = gpu_get_cur_clock(platform);
 		mutex_unlock(&platform->gpu_clock_lock);
 	}
-
+#endif
 	ret += snprintf(buf+ret, PAGE_SIZE-ret, "%d", clock);
 
 	if (ret < PAGE_SIZE - 1) {
