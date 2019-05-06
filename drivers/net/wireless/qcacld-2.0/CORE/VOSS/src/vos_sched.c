@@ -1221,7 +1221,7 @@ static int VosTXThread ( void * Arg )
 
   set_user_nice(current, -1);
 
-#ifdef WLAN_FEATURE_11AC_HIGH_TP
+#if defined(WLAN_FEATURE_11AC_HIGH_TP) && defined (MSM_PLATFORM)
   set_wake_up_idle(true);
 #endif
 
@@ -1389,7 +1389,7 @@ static int VosRXThread ( void * Arg )
 
   set_user_nice(current, -1);
 
-#ifdef WLAN_FEATURE_11AC_HIGH_TP
+#if defined(WLAN_FEATURE_11AC_HIGH_TP) && defined (MSM_PLATFORM)
   set_wake_up_idle(true);
 #endif
 
