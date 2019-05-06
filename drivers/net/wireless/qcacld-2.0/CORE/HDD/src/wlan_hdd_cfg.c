@@ -4379,7 +4379,7 @@ typedef struct
 }tCfgIniEntry;
 
 #ifdef SEC_CONFIG_GRIP_POWER
-#define SEC_GRIPPOWER_FILEPATH	"/etc/firmware/wlan/grippower.info"
+#define SEC_GRIPPOWER_FILEPATH	"/vendor/firmware/wlan/grippower.info"
 bool wlan_hdd_sec_get_grip_power(unsigned int *grip_power_2g, unsigned int *grip_power_5g)
 {
     struct file *fp    = NULL;
