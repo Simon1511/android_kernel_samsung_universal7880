@@ -60,8 +60,8 @@
  * (to see the precise effective timeslice length of your workload,
  *  run vmstat and monitor the context-switches (cs) field)
  */
-unsigned int sysctl_sched_latency = 4000000ULL;
-unsigned int normalized_sysctl_sched_latency = 4000000ULL;
+unsigned int sysctl_sched_latency = 10000000ULL;
+unsigned int normalized_sysctl_sched_latency = 10000000ULL;
 
 /*
  * The initial- and re-scaling of tunables is configurable
@@ -73,14 +73,14 @@ unsigned int normalized_sysctl_sched_latency = 4000000ULL;
  * SCHED_TUNABLESCALING_LINEAR - scaled linear, *ncpus
  */
 enum sched_tunable_scaling sysctl_sched_tunable_scaling
-	= SCHED_TUNABLESCALING_LOG;
+	= SCHED_TUNABLESCALING_NONE;
 
 /*
  * Minimal preemption granularity for CPU-bound tasks:
  * (default: 0.75 msec * (1 + ilog(ncpus)), units: nanoseconds)
  */
-unsigned int sysctl_sched_min_granularity = 550000ULL;
-unsigned int normalized_sysctl_sched_min_granularity = 550000ULL;
+unsigned int sysctl_sched_min_granularity = 1250000ULL;
+unsigned int normalized_sysctl_sched_min_granularity = 1250000ULL;
 
 /*
  * is kept at sysctl_sched_latency / sysctl_sched_min_granularity
