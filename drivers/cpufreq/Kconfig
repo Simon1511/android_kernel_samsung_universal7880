@@ -106,6 +106,12 @@ config CPU_FREQ_DEFAULT_GOV_CAFACTIVE
 	  loading your cpufreq low-level hardware driver, using the
 	  'cafactive' governor for latency-sensitive workloads.
 
+config CPU_FREQ_DEFAULT_GOV_DYNAMIC_INTERACTIVE
+        bool "dynamic_interactive"
+        select CPU_FREQ_GOV_DYNAMIC_INTERACTIVE
+        help
+          Use the CPUFreq governor 'dynamic_interactive' as default
+
 config CPU_FREQ_DEFAULT_GOV_ELECTRODEMAND
 	bool "electrodemand"
 	select CPU_FREQ_GOV_ELECTRODEMAND
@@ -639,6 +645,10 @@ config CPU_FREQ_GOV_CONSERVATIVE
 	  For details, take a look at linux/Documentation/cpu-freq.
 
 	  If in doubt, say N.
+
+config CPU_FREQ_GOV_DYNAMIC_INTERACTIVE
+	tristate "'dynamic_interactive' cpufreq governor"
+	depends on CPU_FREQ
 
 config CPU_FREQ_GOV_YANKACTIVE
 	tristate "'yankactive' cpufreq policy governor"
