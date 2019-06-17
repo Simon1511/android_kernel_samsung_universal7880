@@ -85,3 +85,4 @@ obj-$(CONFIG_TOUCHSCREEN_FTS)          += stm/
 obj-$(CONFIG_TOUCHSCREEN_MELFAS_MMS449)	+= melfas_mms400/
 obj-$(CONFIG_TOUCHSCREEN_ZINITIX_ZT75XX) += zinitix/
 obj-$(CONFIG_TOUCHSCREEN_SEC_TS)	+= sec_ts/
+obj-y                                   += touchboost.o
