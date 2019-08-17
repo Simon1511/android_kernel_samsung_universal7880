@@ -819,9 +819,9 @@ static void sec_ts_read_event(struct sec_ts_data *ts)
 				else if (p_gesture_status->gesture== SEC_TS_GESTURE_CODE_AOD)
 					ts->scrub_id = 0x08;
 
-				input_report_key(ts->input_dev, KEY_BLACK_UI_GESTURE, 1);
+				input_report_key(ts->input_dev, KEY_POWER, 1);
 				input_sync(ts->input_dev);
-				input_report_key(ts->input_dev, KEY_BLACK_UI_GESTURE, 0);
+				input_report_key(ts->input_dev, KEY_POWER, 0);
 
 			}
 			tsp_debug_info(true, &ts->client->dev, "%s: GESTURE  %x %x %x %x %x %x\n", __func__,
@@ -1708,7 +1708,7 @@ static int sec_ts_probe(struct i2c_client *client, const struct i2c_device_id *i
 	set_bit(EV_ABS, ts->input_dev->evbit);
 	set_bit(BTN_TOUCH, ts->input_dev->keybit);
 	set_bit(BTN_TOOL_FINGER, ts->input_dev->keybit);
-	set_bit(KEY_BLACK_UI_GESTURE, ts->input_dev->keybit);
+	set_bit(KEY_POWER, ts->input_dev->keybit);
 
 #ifdef SEC_TS_SUPPORT_TOUCH_KEY
 	if (ts->plat_data->support_mskey) {
