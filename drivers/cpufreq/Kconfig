@@ -707,6 +707,12 @@ config CPUFREQ_DT
 	  systems which share clock and voltage across all CPUs.
 
 	  If in doubt, say N.
+	  
+config FINGERPRINT_BOOST
+	bool "Fingerprint Boost"
+	default n
+	help
+	  Boosts available CPUs to max frequency on fingerprint sensor input.	  
 
 config CPU_INPUT_BOOST
 	bool "CPU Input Boost"
