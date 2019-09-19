@@ -84,9 +84,10 @@ struct mdnie_seq_info {
 };
 
 struct mdnie_table {
+#define MDNIE_IDX_MAX	4
 	char *name;
-	unsigned int update_flag[4];
-	struct mdnie_seq_info seq[4 + 1];
+	unsigned int update_flag[MDNIE_IDX_MAX];
+	struct mdnie_seq_info seq[MDNIE_IDX_MAX + 1];
 };
 
 struct mdnie_scr_info {
@@ -148,6 +149,7 @@ struct mdnie_info {
 	struct mutex		lock;
 
 	unsigned int		enable;
+	unsigned int		lpm;
 
 	struct mdnie_tune	*tune;
 

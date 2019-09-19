@@ -40,7 +40,7 @@
 /* CCIC notifier call sequence,
  * largest priority number device will be called first. */
 typedef enum {
-/* MUIC */	
+/* MUIC */
 	MANAGER_NOTIFY_MUIC_NONE = 0,
 	MANAGER_NOTIFY_MUIC_DOCK,
 	MANAGER_NOTIFY_MUIC_MHL,
@@ -50,6 +50,7 @@ typedef enum {
 	MANAGER_NOTIFY_MUIC_CPUIDLE,
 	MANAGER_NOTIFY_MUIC_CPUFREQ,
 	MANAGER_NOTIFY_MUIC_TIMEOUT_OPEN_DEVICE,
+	MANAGER_NOTIFY_MUIC_UART,
 
 /* CCIC */
 	MANAGER_NOTIFY_CCIC_INITIAL = 20,
@@ -84,8 +85,7 @@ typedef enum {
 } muic_fake_event;
 #endif
 
-typedef struct
-{
+typedef struct {
 	uint64_t src:4;
 	uint64_t dest:4;
 	uint64_t id:8;
@@ -95,20 +95,19 @@ typedef struct
 	void *pd;
 } MANAGER_NOTI_TYPEDEF;
 
-typedef struct _manager_data_t
-{
+typedef struct _manager_data_t {
 	struct blocking_notifier_head manager_muic_notifier;
 	struct blocking_notifier_head manager_ccic_notifier;
 	struct notifier_block ccic_nb;
 	struct notifier_block muic_nb;
-//	struct notifier_block usb_nb;
-//	struct notifier_block batter_nb;
+/*	struct notifier_block usb_nb; */
+/*	struct notifier_block batter_nb; */
 #if defined(CONFIG_VBUS_NOTIFIER)
 	struct notifier_block vbus_nb;
 #endif
 
 	struct delayed_work manager_init_work;
-//	struct workqueue_struct *typec_manager_wq;
+/*	struct workqueue_struct *typec_manager_wq; */
 	struct delayed_work cable_check_work;
 	struct delayed_work muic_noti_work;
 	struct delayed_work rtctime_update_work;
@@ -125,7 +124,7 @@ typedef struct _manager_data_t
 #endif
 	int vbus_state;
 
-	int ccic_attach_state;	// USB_STATUS_NOTIFY_DETACH, UFP, DFP, DRP, NO_USB
+	int ccic_attach_state;	/* USB_STATUS_NOTIFY_DETACH, UFP, DFP, DRP, NO_USB */
 	int ccic_drp_state;
 	int ccic_rid_state;
 	int cable_type;
@@ -133,16 +132,25 @@ typedef struct _manager_data_t
 	bool usb_enable_state;
 	int pd_con_state;
 	int water_det;
+	int wVbus_det;
 	int is_UFPS;
 	void *pd;
+
 	int water_count;
 	int dry_count;
 	int usb210_count;
 	int usb310_count;
 	int waterChg_count;
+	int water_cable_type;
+
 	unsigned long waterDet_duration;
 	unsigned long waterDet_time;
 	unsigned long dryDet_time;
+
+	unsigned long wVbus_duration;
+	unsigned long wVbusHigh_time;
+	unsigned long wVbusLow_time;
+
 	int dp_attach_state;
 	int dp_cable_type;
 	int dp_hpd_state;

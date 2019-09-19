@@ -183,6 +183,10 @@ static ssize_t barcode_emul_store(struct device *dev,
 		mobeam_write(data, countset, &hop_count);
 	} else {
 		pr_info("[SSP] %s - REGISTER SET(0x%X)\n", __func__, buf[0]);
+		if(size < 8) {
+			pr_info("[SSP] %s - not enough size of input data(%d)", __func__, (int)size);
+			return -EINVAL;
+		}
 		for (i = 0; i < 15; i++) {
 			if (reg_id_table[i].reg == buf[0])
 				send_buf[0] = reg_id_table[i].index;

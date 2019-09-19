@@ -123,6 +123,27 @@ static int s2mu005_read_reg(struct i2c_client *client, int reg, u8 *buf)
 	return ret;
 }
 
+static void s2mu005_fg_test_read(struct i2c_client *client)
+{
+	static int reg_list[] = {
+		0x03, 0x0E, 0x0F, 0x10, 0x11, 0x1E, 0x1F, 0x21, 0x24, 0x25,
+		0x26, 0x27, 0x44, 0x45, 0x48, 0x4A, 0x4B, 0x50, 0x51, 0x52,
+		0x53, 0x58, 0x59, 0x5A, 0x5B
+	};
+	u8 data = 0;
+	char str[1016] = {0,};
+	int i = 0, reg_list_size = 0;
+
+	reg_list_size = ARRAY_SIZE(reg_list);
+	for (i = 0; i < reg_list_size; i++) {
+		s2mu005_read_reg_byte(client, reg_list[i], &data);
+		sprintf(str+strlen(str), "0x%02x:0x%02x, ", reg_list[i], data);
+	}
+
+	/* print buffer */
+	pr_info("[FG]%s: %s\n", __func__, str);
+}
+
 static void WA_0_issue_at_init(struct s2mu005_fuelgauge_data *fuelgauge)
 {
 	int a = 0;
@@ -774,6 +795,8 @@ static int s2mu005_get_rawsoc(struct s2mu005_fuelgauge_data *fuelgauge)
 		}
 		/* ------ read remaining capacity -------- */
 	}
+
+	s2mu005_fg_test_read(fuelgauge->i2c);
 
 	return min(fuelgauge->info.soc, 10000);
 

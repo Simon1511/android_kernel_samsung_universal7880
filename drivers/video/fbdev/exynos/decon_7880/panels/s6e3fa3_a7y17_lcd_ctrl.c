@@ -1,9 +1,5 @@
 /*
- * s6e3fa3_a7y17_lcd_ctrl.c
- *
- * Samsung SoC MIPI LCD CONTROL functions
- *
- * Copyright (c) 2015 Samsung Electronics
+ * Copyright (c) Samsung Electronics Co., Ltd.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 as
@@ -13,6 +9,7 @@
 #include <linux/lcd.h>
 #include <linux/backlight.h>
 #include <linux/of_device.h>
+#include <linux/ctype.h>
 #include <video/mipi_display.h>
 #include "../dsim.h"
 #include "dsim_panel.h"
@@ -58,7 +55,7 @@
 #define smtd_dbg(format, arg...)
 #endif
 
-#define get_bit(value, shift, size)	((value >> shift) & (0xffffffff >> (32 - size)))
+#define get_bit(value, shift, width)	((value >> shift) & (GENMASK(width - 1, 0)))
 
 union aor_info {
 	u32 value;
@@ -162,6 +159,9 @@ struct lcd_info {
 	unsigned int			prev_brightness;
 	unsigned int			prev_alpm;
 #endif
+	unsigned char rddpm[LDI_LEN_RDDPM];
+	unsigned char rddsm[LDI_LEN_RDDSM];
+	unsigned char esderr[LDI_LEN_ESDERR];
 #endif
 };
 
@@ -683,13 +683,13 @@ static int s6e3fa3_read_coordinate(struct lcd_info *lcd)
 static int s6e3fa3_read_manufacture_info(struct lcd_info *lcd)
 {
 	int ret = 0;
-	unsigned char buf[LDI_LEN_MANUFACTURE_INFO] = {0, };
+	unsigned char buf[LDI_GPARA_MANUFACTURE_INFO + LDI_LEN_MANUFACTURE_INFO] = {0, };
 
-	ret = s6e3fa3_read_info(lcd, LDI_REG_MANUFACTURE_INFO, LDI_LEN_MANUFACTURE_INFO, buf);
+	ret = s6e3fa3_read_info(lcd, LDI_REG_MANUFACTURE_INFO, ARRAY_SIZE(buf), buf);
 	if (ret < 0)
 		dev_err(&lcd->ld->dev, "%s: fail\n", __func__);
 
-	memcpy(lcd->manufacture_info, buf, LDI_LEN_MANUFACTURE_INFO);
+	memcpy(lcd->manufacture_info, &buf[LDI_GPARA_MANUFACTURE_INFO], LDI_LEN_MANUFACTURE_INFO);
 
 	return ret;
 }
@@ -736,30 +736,28 @@ static int s6e3fa3_read_hbm(struct lcd_info *lcd)
 static int s6e3fa3_read_status(struct lcd_info *lcd)
 {
 	int ret = 0;
-	unsigned char rddpm[LDI_LEN_RDDPM] = {0, };
-	unsigned char rddsm[LDI_LEN_RDDSM] = {0, };
-	unsigned char esderr[LDI_LEN_ESDERR] = {0, };
 
 	DSI_WRITE(SEQ_TEST_KEY_ON_F0, ARRAY_SIZE(SEQ_TEST_KEY_ON_F0));
 
-	ret = s6e3fa3_read_info(lcd, LDI_REG_RDDPM, LDI_LEN_RDDPM, rddpm);
+	ret = s6e3fa3_read_info(lcd, LDI_REG_RDDPM, LDI_LEN_RDDPM, lcd->rddpm);
 	if (ret < 0) {
 		dev_err(&lcd->ld->dev, "%s: fail\n", __func__);
 		goto exit;
 	}
 
-	ret = s6e3fa3_read_info(lcd, LDI_REG_RDDSM, LDI_LEN_RDDSM, rddsm);
+	ret = s6e3fa3_read_info(lcd, LDI_REG_RDDSM, LDI_LEN_RDDSM, lcd->rddsm);
 	if (ret < 0) {
 		dev_err(&lcd->ld->dev, "%s: fail\n", __func__);
 		goto exit;
 	}
-	ret = s6e3fa3_read_info(lcd, LDI_REG_ESDERR, LDI_LEN_ESDERR, esderr);
+	ret = s6e3fa3_read_info(lcd, LDI_REG_ESDERR, LDI_LEN_ESDERR, lcd->esderr);
 	if (ret < 0) {
 		dev_err(&lcd->ld->dev, "%s: fail\n", __func__);
 		goto exit;
 	}
 
-	dev_info(&lcd->ld->dev, "%s: dpm: %2x dsm: %2x err: %2x\n", __func__, rddpm[0], rddsm[0], esderr[0]);
+	dev_info(&lcd->ld->dev, "%s: dpm: %2x dsm: %2x err: %2x\n",
+			__func__, lcd->rddpm[0], lcd->rddsm[0], lcd->esderr[0]);
 
 	DSI_WRITE(SEQ_TEST_KEY_OFF_F0, ARRAY_SIZE(SEQ_TEST_KEY_OFF_F0));
 
@@ -869,11 +867,6 @@ static int init_hbm_gamma(struct lcd_info *lcd)
 	for (i = IBRIGHTNESS_MAX; i < IBRIGHTNESS_HBM_MAX; i++)
 		memcpy(&lcd->gamma_table[i], SEQ_GAMMA_CONDITION_SET, GAMMA_CMD_CNT);
 
-/*
-*	V255 of 443 nit
-*	ratio = (443-420) / (600-420) = 0.127778
-*	target gamma = 256 + (281 - 256) * 0.127778 = 259.1944
-*/
 	for (i = IBRIGHTNESS_MAX; i < IBRIGHTNESS_HBM_MAX; i++) {
 		t1 = hitp->ibr_tbl[i] - hitp->ibr_tbl[hitp->idx_ref];
 		t2 = hitp->ibr_tbl[hitp->idx_hbm] - hitp->ibr_tbl[hitp->idx_ref];
@@ -1039,6 +1032,13 @@ static int panel_dpui_notifier_callback(struct notifier_block *self,
 	struct dpui_info *dpui = data;
 	char tbuf[MAX_DPUI_VAL_LEN];
 	int size;
+	unsigned int site, rework, poc, i, invalid = 0;
+	unsigned char *m_info;
+
+	struct seq_file m = {
+		.buf = tbuf,
+		.size = sizeof(tbuf) - 1,
+	};
 
 	if (dpui == NULL) {
 		pr_err("%s: dpui is null\n", __func__);
@@ -1071,6 +1071,23 @@ static int panel_dpui_notifier_callback(struct notifier_block *self,
 		(lcd->coordinate[1] & 0xFF00) >> 8, lcd->coordinate[1] & 0x00FF);
 	set_dpui_field(DPUI_KEY_CELLID, tbuf, size);
 
+	m_info = lcd->manufacture_info;
+	site = get_bit(m_info[0], 4, 4);
+	rework = get_bit(m_info[0], 0, 4);
+	poc = get_bit(m_info[1], 0, 4);
+	seq_printf(&m, "%d%d%d%02x%02x", site, rework, poc, m_info[2], m_info[3]);
+
+	for (i = 4; i < LDI_LEN_MANUFACTURE_INFO; i++) {
+		if (!isdigit(m_info[i]) && !isupper(m_info[i])) {
+			invalid = 1;
+			break;
+		}
+	}
+	for (i = 4; !invalid && i < LDI_LEN_MANUFACTURE_INFO; i++)
+		seq_printf(&m, "%c", m_info[i]);
+
+	set_dpui_field(DPUI_KEY_OCTAID, tbuf, m.count);
+
 	return NOTIFY_DONE;
 }
 #endif /* CONFIG_DISPLAY_USE_INFO */
@@ -1085,6 +1102,8 @@ static int fb_notifier_callback(struct notifier_block *self,
 	switch (event) {
 	case FB_EVENT_BLANK:
 	case FB_EARLY_EVENT_BLANK:
+	case DECON_EVENT_DOZE:
+	case DECON_EARLY_EVENT_DOZE:
 		break;
 	default:
 		return NOTIFY_DONE;
@@ -1099,11 +1118,9 @@ static int fb_notifier_callback(struct notifier_block *self,
 	if (evdata->info->node)
 		return NOTIFY_DONE;
 
-	if (event == FB_EARLY_EVENT_BLANK && fb_blank == FB_BLANK_POWERDOWN)
+	if (IS_EARLY(event) && fb_blank == FB_BLANK_POWERDOWN)
 		pinctrl_enable(lcd, 0);
-	else if (event == FB_EVENT_BLANK && fb_blank == FB_BLANK_POWERDOWN)
-		pinctrl_enable(lcd, 0);
-	else if (event == FB_EVENT_BLANK && fb_blank == FB_BLANK_UNBLANK) {
+	else if (IS_AFTER(event) && fb_blank == FB_BLANK_UNBLANK) {
 		pinctrl_enable(lcd, 1);
 		s6e3fa3_displayon(lcd);
 	}
@@ -1286,7 +1303,7 @@ static ssize_t window_type_show(struct device *dev,
 {
 	struct lcd_info *lcd = dev_get_drvdata(dev);
 
-	sprintf(buf, "%x %x %x\n", lcd->id_info.id[0], lcd->id_info.id[1], lcd->id_info.id[2]);
+	sprintf(buf, "%02x %02x %02x\n", lcd->id_info.id[0], lcd->id_info.id[1], lcd->id_info.id[2]);
 
 	return strlen(buf);
 }
@@ -1544,22 +1561,30 @@ static ssize_t octa_id_show(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
 	struct lcd_info *lcd = dev_get_drvdata(dev);
-	int site, rework, poc;
+	unsigned int site, rework, poc, i, invalid = 0;
 	unsigned char *m_info;
 
+	struct seq_file m = {
+		.buf = buf,
+		.size = PAGE_SIZE - 1,
+	};
+
 	m_info = lcd->manufacture_info;
+	site = get_bit(m_info[0], 4, 4);
+	rework = get_bit(m_info[0], 0, 4);
+	poc = get_bit(m_info[1], 0, 4);
+	seq_printf(&m, "%d%d%d%02x%02x", site, rework, poc, m_info[2], m_info[3]);
 
-	site = m_info[1] & 0xf0;
-	site >>= 4;
-	rework = m_info[1] & 0x0f;
-	poc = m_info[2] & 0x0f;
+	for (i = 4; i < LDI_LEN_MANUFACTURE_INFO; i++) {
+		if (!isdigit(m_info[i]) && !isupper(m_info[i])) {
+			invalid = 1;
+			break;
+		}
+	}
+	for (i = 4; !invalid && i < LDI_LEN_MANUFACTURE_INFO; i++)
+		seq_printf(&m, "%c", m_info[i]);
 
-	sprintf(buf, "%d%d%d%02x%02x%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c%c\n",
-		site, rework, poc, m_info[3], m_info[4],
-		m_info[5], m_info[6], m_info[7], m_info[8],
-		m_info[9], m_info[10], m_info[11], m_info[12],
-		m_info[13], m_info[14], m_info[15], m_info[16],
-		m_info[17], m_info[18], m_info[19], m_info[20]);
+	seq_puts(&m, "\n");
 
 	return strlen(buf);
 }
@@ -1569,14 +1594,28 @@ static ssize_t octa_id_show(struct device *dev,
  * HW PARAM LOGGING SYSFS NODE
  */
 static ssize_t dpui_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
+	struct device_attribute *attr, char *buf)
 {
-	update_dpui_log(DPUI_LOG_LEVEL_INFO);
-	get_dpui_log(buf, DPUI_LOG_LEVEL_INFO);
+	int ret;
 
-	dev_info(dev, "%s: %s\n", __func__, buf);
+	update_dpui_log(DPUI_LOG_LEVEL_INFO, DPUI_TYPE_PANEL);
+	ret = get_dpui_log(buf, DPUI_LOG_LEVEL_INFO, DPUI_TYPE_PANEL);
+	if (ret < 0) {
+		pr_err("%s failed to get log %d\n", __func__, ret);
+		return ret;
+	}
 
-	return strlen(buf);
+	pr_info("%s\n", buf);
+	return ret;
+}
+
+static ssize_t dpui_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	if (buf[0] == 'C' || buf[0] == 'c')
+		clear_dpui_log(DPUI_LOG_LEVEL_INFO, DPUI_TYPE_PANEL);
+
+	return size;
 }
 
 /*
@@ -1584,18 +1623,32 @@ static ssize_t dpui_show(struct device *dev,
  * HW PARAM LOGGING SYSFS NODE
  */
 static ssize_t dpui_dbg_show(struct device *dev,
-		struct device_attribute *attr, char *buf)
+	struct device_attribute *attr, char *buf)
 {
-	update_dpui_log(DPUI_LOG_LEVEL_DEBUG);
-	get_dpui_log(buf, DPUI_LOG_LEVEL_DEBUG);
+	int ret;
 
-	dev_info(dev, "%s: %s\n", __func__, buf);
+	update_dpui_log(DPUI_LOG_LEVEL_DEBUG, DPUI_TYPE_PANEL);
+	ret = get_dpui_log(buf, DPUI_LOG_LEVEL_DEBUG, DPUI_TYPE_PANEL);
+	if (ret < 0) {
+		pr_err("%s failed to get log %d\n", __func__, ret);
+		return ret;
+	}
 
-	return strlen(buf);
+	pr_info("%s\n", buf);
+	return ret;
 }
 
-static DEVICE_ATTR(dpui, 0440, dpui_show, NULL);
-static DEVICE_ATTR(dpui_dbg, 0440, dpui_dbg_show, NULL);
+static ssize_t dpui_dbg_store(struct device *dev,
+	struct device_attribute *attr, const char *buf, size_t size)
+{
+	if (buf[0] == 'C' || buf[0] == 'c')
+		clear_dpui_log(DPUI_LOG_LEVEL_DEBUG, DPUI_TYPE_PANEL);
+
+	return size;
+}
+
+static DEVICE_ATTR(dpui, 0660, dpui_show, dpui_store);
+static DEVICE_ATTR(dpui_dbg, 0660, dpui_dbg_show, dpui_dbg_store);
 #endif
 
 #ifdef CONFIG_LCD_DOZE_MODE
@@ -1614,6 +1667,11 @@ static ssize_t alpm_doze_store(struct device *dev,
 		return ret;
 
 	dev_info(&lcd->ld->dev, "%s: %d, %d, %d, %d\n", __func__, value, dsim->doze_state, lcd->current_alpm, lcd->alpm);
+
+	if (lcd->state != PANEL_STATE_RESUMED) {
+		dev_info(&lcd->ld->dev, "%s: panel state is %d\n", __func__, lcd->state);
+		return -EINVAL;
+	}
 
 	if (value >= ALPM_MODE_MAX) {
 		dev_err(&lcd->ld->dev, "%s: undefined alpm mode: %d\n", __func__, value);
@@ -1769,7 +1827,7 @@ static void lcd_init_svc(struct lcd_info *lcd)
 	buf = kzalloc(PATH_MAX, GFP_KERNEL);
 	if (buf) {
 		path = kernfs_path(svc_kobj->sd, buf, PATH_MAX);
-		dev_info(&lcd->ld->dev, "%s: %s %s\n", __func__, path, !kn ? "create" : "");
+		dev_info(&lcd->ld->dev, "%s: %s %s\n", __func__, buf, !kn ? "create" : "");
 		kfree(buf);
 	}
 
@@ -1943,6 +2001,23 @@ static int dsim_panel_dump(struct dsim_device *dsim)
 
 	return 0;
 }
+
+#ifdef CONFIG_LOGGING_BIGDATA_BUG
+unsigned int get_panel_bigdata(struct dsim_device *dsim)
+{
+	struct lcd_info *lcd = dsim->priv.par;
+	unsigned int val = 0;
+
+	lcd->rddpm[0] = 0xff;
+	lcd->rddsm[0] = 0xff;
+
+	s6e3fa3_read_status(lcd);
+
+	val = (lcd->rddpm[0]  << 8) | lcd->rddsm[0];
+
+	return val;
+}
+#endif
 
 #ifdef CONFIG_LCD_DOZE_MODE
 static int dsim_panel_enteralpm(struct dsim_device *dsim)

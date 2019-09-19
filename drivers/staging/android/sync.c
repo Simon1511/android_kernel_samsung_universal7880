@@ -211,8 +211,8 @@ static void sync_fence_delayed_free(struct kref *kref) {
 	 * pend the worker for a jiffie to prevent superfluous invokation of
 	 * workers.
 	 */
-	llist_add(&fence->rmnode, &delayed_free_list);
-	schedule_delayed_work(&sync_fence_delayed_work, 1);
+	if (llist_add(&fence->rmnode, &delayed_free_list))
+		schedule_delayed_work(&sync_fence_delayed_work, 1);
 }
 
 static void fence_check_cb_func(struct fence *f, struct fence_cb *cb)
@@ -534,6 +534,13 @@ static bool android_fence_enable_signaling(struct fence *fence)
 	return true;
 }
 
+static void android_fence_disable_signaling(struct fence *fence)
+{
+	struct sync_pt *pt = container_of(fence, struct sync_pt, base);
+
+	list_del_init(&pt->active_list);
+}
+
 static int android_fence_fill_driver_data(struct fence *fence,
 					  void *data, int size)
 {
@@ -577,6 +584,7 @@ static const struct fence_ops android_fence_ops = {
 	.get_driver_name = android_fence_get_driver_name,
 	.get_timeline_name = android_fence_get_timeline_name,
 	.enable_signaling = android_fence_enable_signaling,
+	.disable_signaling = android_fence_disable_signaling,
 	.signaled = android_fence_signaled,
 	.wait = fence_default_wait,
 	.release = android_fence_release,

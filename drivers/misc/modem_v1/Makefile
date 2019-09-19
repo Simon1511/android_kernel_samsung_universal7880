@@ -23,3 +23,5 @@ obj-$(CONFIG_UMTS_MODEM_SS310AP) += modem_ctrl_ss310ap.o
 obj-$(CONFIG_LINK_CONTROL_MSG_IOSM) += link_ctrlmsg_iosm.o
 obj-$(CONFIG_LINK_CONTROL_MSG_COMMAND) += link_ctrlmsg_command.o
 obj-$(CONFIG_DEBUG_PKTLOG) += modem_pktlog.o
+
+obj-$(CONFIG_KLAT) += modem_klat.o

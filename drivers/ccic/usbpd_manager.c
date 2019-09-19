@@ -47,23 +47,9 @@ static struct switch_dev switch_dock = {
 
 #define MAX_INPUT_DATA (255)
 #define SEC_UVDM_ALIGN (4)
-#define SEC_UVDM_WAIT_MS (2000)
 #define SEC_UVDM_MAXDATA_FIRST (12)
 #define SEC_UVDM_MAXDATA_NORMAL (16)
 #define SEC_UVDM_CHECKSUM_COUNT (20)
-
-enum uvdm_res_type {
-	RES_INIT = 0,
-	RES_ACK,
-	RES_NAK,
-	RES_BUSY,
-};
-
-enum uvdm_rx_type {
-	RX_ACK = 0,
-	RX_NAK,
-	RX_BUSY,
-};
 
 #ifdef CONFIG_USB_TYPEC_MANAGER_NOTIFIER
 void select_pdo(int num);

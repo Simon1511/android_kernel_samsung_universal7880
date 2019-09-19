@@ -11,6 +11,7 @@ config SEC_MODEM_SS310AP
 	select UMTS_MODEM_SS310AP
 	select LINK_DEVICE_SHMEM
 	select CP_SECURE_BOOT
+	select KLAT
 	default y
 
 menu "Configuration Description"
@@ -82,6 +83,10 @@ config LINK_CONTROL_MSG_IOSM
 
 config CP_SECURE_BOOT
 	bool "Support CP Secure Boot"
+	default n
+
+config KLAT
+	bool "kernel CLAT"
 	default n
 
 endmenu

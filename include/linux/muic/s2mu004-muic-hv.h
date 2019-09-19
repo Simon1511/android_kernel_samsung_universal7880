@@ -261,7 +261,6 @@ extern void s2mu004_muic_set_adcmode_oneshot(struct s2mu004_muic_data *muic_data
 #endif /* !CONFIG_SEC_FACTORY */
 extern void s2mu004_hv_muic_adcmode_oneshot(struct s2mu004_muic_data *muic_data);
 #endif
-extern void s2mu004_muic_prepare_afc_charger(struct s2mu004_muic_data *muic_data);
 extern bool s2mu004_muic_check_change_dev_afc_charger
 	(struct s2mu004_muic_data *muic_data, muic_attached_dev_t new_dev);
 

@@ -306,6 +306,13 @@ enum usbpd_policy_informed {
 	PLUG_DETACHED		= 5,
 };
 
+typedef enum {
+	PLUG_CTRL_RP0 = 0,
+	PLUG_CTRL_RP80 = 1,
+	PLUG_CTRL_RP180 = 2,
+	PLUG_CTRL_RP330 = 3
+} CCIC_RP_SCR_SEL;
+
 typedef struct usbpd_phy_ops {
 	/*    1st param should be 'usbpd_data *'    */
 	int    (*tx_msg)(void *, msg_header_type *, data_obj_type *);
@@ -394,13 +401,11 @@ struct usbpd_manager_data {
 	/* data role swap*/
 	bool data_role_swap;
 	bool vconn_source_swap;
-
-#if 1
+	bool is_samsung_accessory_enter_mode;
 	bool uvdm_first_req;
 	bool uvdm_dir;
 	struct completion uvdm_out_wait;
 	struct completion uvdm_in_wait;
-#endif
 	uint16_t Vendor_ID;
 	uint16_t Product_ID;
 	uint16_t Device_Version;
@@ -408,11 +413,9 @@ struct usbpd_manager_data {
 	uint16_t SVID_0;
 	uint16_t SVID_1;
 	uint16_t Standard_Vendor_ID;
-
 	struct usbpd_data *pd_data;
 	struct delayed_work	acc_detach_handler;
 	muic_attached_dev_t	attached_dev;
-	int is_samsung_accessory_enter_mode;
 };
 
 struct usbpd_data {
@@ -434,6 +437,7 @@ struct usbpd_data {
 	struct work_struct	worker;
 	struct completion	msg_arrived;
 	unsigned                wait_for_msg_arrived;
+	int 				pd_support;
 };
 
 static inline struct usbpd_data *protocol_rx_to_usbpd(struct protocol_data *rx)

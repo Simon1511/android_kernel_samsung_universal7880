@@ -39,6 +39,7 @@
 #define REBOOT_MODE_SECURE	7	/* image secure check fail */
 #define REBOOT_MODE_FWUP	9	/* emergency firmware update */
 #define REBOOT_MODE_EM_FUSE	10	/* EMC market fuse */
+#define REBOOT_MODE_BOOTLOADER	0xd
 
 #define REBOOT_SET_PREFIX	0xabc00000
 #define REBOOT_SET_LCD_RES	0x000b0000
@@ -164,6 +165,8 @@ static void sec_reboot(enum reboot_mode reboot_mode, const char *cmd)
 			exynos_pmu_write(EXYNOS_INFORM3, REBOOT_MODE_PREFIX | REBOOT_MODE_RECOVERY);
 		else if (!strcmp(cmd, "download"))
 			exynos_pmu_write(EXYNOS_INFORM3, REBOOT_MODE_PREFIX | REBOOT_MODE_DOWNLOAD);
+		else if (!strcmp(cmd, "bootloader"))
+			exynos_pmu_write(EXYNOS_INFORM3,REBOOT_MODE_PREFIX | REBOOT_MODE_BOOTLOADER);	
 		else if (!strcmp(cmd, "upload"))
 			exynos_pmu_write(EXYNOS_INFORM3, REBOOT_MODE_PREFIX | REBOOT_MODE_UPLOAD);
 		else if (!strcmp(cmd, "secure"))

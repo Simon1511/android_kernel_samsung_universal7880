@@ -103,7 +103,9 @@ static bool s2mu004_get_ccic_cable_state(struct s2mu004_muic_data *muic_data);
 #if defined(DEBUG_MUIC)
 #define MAX_LOG 25
 #define READ 0
+#ifndef WRITE
 #define WRITE 1
+#endif
 
 static u8 s2mu004_log_cnt;
 static u8 s2mu004_log[MAX_LOG][3];
@@ -2027,7 +2029,7 @@ static int s2mu004_muic_refresh_adc(struct s2mu004_muic_data *muic_data)
 	return adc;
 }
 
-static int s2mu004_muic_get_vbus_state(struct s2mu004_muic_data *muic_data)
+int s2mu004_muic_get_vbus_state(struct s2mu004_muic_data *muic_data)
 {
 	struct i2c_client *i2c = muic_data->i2c;
 	u8 reg_val = 0;
@@ -2037,6 +2039,20 @@ static int s2mu004_muic_get_vbus_state(struct s2mu004_muic_data *muic_data)
 	vbus = !!(reg_val & DEV_TYPE_APPLE_VBUS_WAKEUP);
 	pr_info("[muic] %s vbus : (%d)\n", __func__, vbus);
 	return vbus;
+}
+
+int s2mu004_muic_bcd_rescan(struct s2mu004_muic_data *muic_data)
+{
+	int data = 0;
+
+	pr_info("%s\n", __func__);
+
+	/* start secondary dp dm detect */
+	data = s2mu004_i2c_read_byte(muic_data->i2c, S2MU004_REG_MUIC_BCD_RESCAN);
+	data |= MUIC_BCD_RESCAN_MASK;
+	s2mu004_i2c_write_byte(muic_data->i2c, S2MU004_REG_MUIC_BCD_RESCAN, data);
+
+	return 0;
 }
 
 #if defined(CONFIG_SUPPORT_RID_PERIODIC)
@@ -2245,8 +2261,11 @@ static void s2mu004_muic_handle_attach(struct s2mu004_muic_data *muic_data,
 			pr_info("%s: ready:%d  afc_check:%d\n", __func__,
 					muic_data->is_afc_muic_ready, muic_data->afc_check);
 			if (muic_data->is_afc_muic_ready == false && muic_data->afc_check
-					&& pmuic->is_afc_pdic_ready == true)
-				s2mu004_muic_prepare_afc_charger(muic_data);
+					&& pmuic->is_afc_pdic_ready == true) {
+				cancel_delayed_work(&muic_data->prepare_afc_charger);
+				schedule_delayed_work(&muic_data->prepare_afc_charger,
+						msecs_to_jiffies(200));
+			}
 		}
 #endif
 		com_to_open_with_vbus(muic_data);
@@ -2499,7 +2518,7 @@ static void s2mu004_muic_detect_dev(struct s2mu004_muic_data *muic_data)
 			muic_data->jig_state = false;
 			muic_data->re_detect = 0;
 			muic_data->afc_check = false;
-			
+
 			if (muic_data->is_dcd_recheck) {
 				muic_data->is_dcd_recheck = false;
 			}
@@ -3856,7 +3875,7 @@ static int s2mu004_muic_probe(struct platform_device *pdev)
 	pmuic->is_afc_reset = false;
 	pmuic->is_dcp_charger = false;
 	pmuic->set_water_detect = s2mu004_muic_ccic_set_water_det;
-	pmuic->is_afc_pdic_ready = false;	
+	pmuic->is_afc_pdic_ready = false;
 
 	mutex_init(&muic_data->switch_mutex);
 

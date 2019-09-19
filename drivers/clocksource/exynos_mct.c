@@ -92,8 +92,9 @@ struct mct_clock_event_device {
 
 static void exynos4_mct_write(unsigned int value, unsigned long offset)
 {
-	unsigned long stat_addr, i;
+	unsigned long stat_addr;
 	u32 mask;
+	u32 i;
 
 	writel_relaxed(value, reg_base + offset);
 
@@ -195,6 +196,8 @@ static u64 exynos4_read_count_64(void)
  *
  * Returns the number of cycles in the global counter (lower 32 bits).
  */
+
+#if !IS_ENABLED(CONFIG_ARM64) && !IS_ENABLED(CONFIG_ARM_ARCH_TIMER)
 static u32 notrace exynos4_read_count_32(void)
 {
 	return readl_relaxed(reg_base + EXYNOS4_MCT_G_CNT_L);
@@ -219,7 +222,6 @@ struct clocksource mct_frc = {
 	.resume		= exynos4_frc_resume,
 };
 
-#if !IS_ENABLED(CONFIG_ARM64) && !IS_ENABLED(CONFIG_ARM_ARCH_TIMER)
 static u64 notrace exynos4_read_sched_clock(void)
 {
 	return exynos4_read_count_32();

@@ -92,12 +92,15 @@ struct sec_fg_info {
 
 #if defined(CONFIG_BATTERY_AGE_FORECAST)
 struct fg_age_data_info {
-        int battery_table3[88]; // evt2
-        int battery_table4[22]; // evt2
-        int batcap[4];
-        int accum[2];
+	int battery_table3[88]; // evt2
+	int battery_table4[22]; // evt2
+	int batcap[4];
+	int accum[2];
 	int soc_arr_val[22];
-        int ocv_arr_val[22];
+	int ocv_arr_val[22];
+#if defined(CONFIG_S2MU004_MODE_CHANGE_BY_TOPOFF)
+	int volt_mode_tunning;
+#endif
 };
 
 #define	fg_age_data_info_t \
@@ -122,24 +125,25 @@ typedef struct s2mu004_fuelgauge_platform_data {
 } s2mu004_fuelgauge_platform_data_t;
 
 struct s2mu004_fuelgauge_data {
-        struct device           *dev;
-        struct i2c_client       *i2c;
-        struct i2c_client       *pmic;
-        struct mutex            fuelgauge_mutex;
-        s2mu004_fuelgauge_platform_data_t *pdata;
-        struct power_supply     psy_fg;
-        /* struct delayed_work isr_work; */
+	struct device           *dev;
+	struct i2c_client       *i2c;
+	struct i2c_client       *pmic;
+	struct mutex            fuelgauge_mutex;
+	s2mu004_fuelgauge_platform_data_t *pdata;
+	struct power_supply	psy_fg;
+	/* struct delayed_work isr_work; */
 
-        int cable_type;
-        bool is_charging;
-        int mode;
-        int revision;
+	int cable_type;
+	bool is_charging;
+	int mode;
+	int revision;
+	int topoff_current;
 
-        /* HW-dedicated fuel guage info structure
-         * used in individual fuel gauge file only
-         * (ex. dummy_fuelgauge.c)
-         */
-        struct sec_fg_info      info;
+	/* HW-dedicated fuel guage info structure
+	 * used in individual fuel gauge file only
+	 * (ex. dummy_fuelgauge.c)
+	 */
+	struct sec_fg_info      info;
 #if defined(CONFIG_BATTERY_AGE_FORECAST)
 	fg_age_data_info_t*	age_data_info;
 	int fg_num_age_step;
@@ -153,6 +157,7 @@ struct s2mu004_fuelgauge_data {
         unsigned int capacity_old;      /* only for atomic calculation */
         unsigned int capacity_max;      /* only for dynamic calculation */
         unsigned int standard_capacity;
+		int raw_capacity;
 
         bool initial_update_of_soc;
 	bool sleep_initial_update_of_soc;

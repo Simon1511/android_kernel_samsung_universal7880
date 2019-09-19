@@ -69,6 +69,11 @@ config DECON_EVENT_LOG
         depends on DEBUG_INFO && EXYNOS_DECON_7880
         default y
 
+config LOGGING_BIGDATA_BUG
+	bool "Logging extra information when decon bug"
+	depends on EXYNOS_DECON_7880
+	default n
+
 source "drivers/video/fbdev/exynos/decon_7880/vpp/Kconfig"
 
 endif

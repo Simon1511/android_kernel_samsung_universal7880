@@ -3,6 +3,8 @@
 #endif
 #if defined(CONFIG_DUAL_ROLE_USB_INTF)
 #include <linux/usb/class-dual-role.h>
+#elif defined(CONFIG_TYPEC)
+#include <linux/usb/typec.h>
 #endif
 
 #ifdef CONFIG_USB_TYPEC_MANAGER_NOTIFIER
@@ -29,6 +31,15 @@ enum {
 	CCIC_DOCK_DEXPAD	= 114,	/* Samsung DexPAD */
 	CCIC_DOCK_NEW		= 200,	/* For New Event */
 };
+
+typedef enum {
+	TYPE_C_DETACH = 0,
+	TYPE_C_ATTACH_DFP = 1, /* Host */
+	TYPE_C_ATTACH_UFP = 2, /* Device */
+	TYPE_C_ATTACH_DRP = 3, /* Dual role */
+	TYPE_C_PR_SWAP = 4,
+	TYPE_C_DR_SWAP = 5,
+} CCIC_OTP_MODE;
 
 #define GEAR_VR_DETACH_WAIT_MS		(1000)
 
@@ -81,5 +92,11 @@ extern int dual_role_set_prop(struct dual_role_phy_instance *dual_role,
 			      enum dual_role_property prop,
 			      const unsigned int *val);
 extern int dual_role_init(void *_data);
+#elif defined(CONFIG_TYPEC)
+extern void typec_role_swap_check(struct work_struct *wk);
+extern int typec_port_type_set(const struct typec_capability *cap,
+					enum typec_port_type port_type);
+extern int typec_get_pd_support(void *_data);
+extern int typec_init(void *_data);
 #endif
 #endif

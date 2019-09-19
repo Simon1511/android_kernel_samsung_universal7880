@@ -456,3 +456,9 @@ config XADC_SHARE_BATT_WITH_USB_THM
 	default n
 	help
 	  Say Y to enable use xadc mux for BAT_THM with USB_THM
+
+config S2MU004_MODE_CHANGE_BY_TOPOFF
+	bool "enable s2mu004 mode change by topoff"
+	default n
+	help
+	  Say Y to enable s2mu004 mode change by topoff

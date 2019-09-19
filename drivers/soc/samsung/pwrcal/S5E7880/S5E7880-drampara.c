@@ -3,7 +3,7 @@
 #include "S5E7880-sfrbase.h"
 #include "S5E7880-vclk-internal.h"
 #include "S5E7880-pmusfr.h"
-
+#include <asm/io.h>
 
 #ifdef PWRCAL_TARGET_LINUX
 #include <soc/samsung/ect_parser.h>

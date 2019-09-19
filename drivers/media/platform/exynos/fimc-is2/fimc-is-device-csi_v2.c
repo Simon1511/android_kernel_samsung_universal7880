@@ -885,7 +885,7 @@ static void csi_err_handler(struct fimc_is_device_csi *csi, u32 *err_id)
 			case CSIS_ERR_DMA_ERR_DMAFIFO_FULL:
 				err_str = GET_STR(CSIS_ERR_DMA_ERR_DMAFIFO_FULL);
 #ifdef OVERFLOW_PANIC_ENABLE
-#ifdef USE_CAMERA_HW_BIG_DATA
+#ifdef USE_CAMERA_HW_BIG_DATA_FOR_PANIC
 				fimc_is_vender_csi_err_handler(csi);
 				fimc_is_sec_copy_err_cnt_to_file();
 #endif
@@ -896,7 +896,7 @@ static void csi_err_handler(struct fimc_is_device_csi *csi, u32 *err_id)
 			case CSIS_ERR_DMA_ERR_TRXFIFO_FULL:
 				err_str = GET_STR(CSIS_ERR_DMA_ERR_TRXFIFO_FULL);
 #ifdef OVERFLOW_PANIC_ENABLE
-#ifdef USE_CAMERA_HW_BIG_DATA
+#ifdef USE_CAMERA_HW_BIG_DATA_FOR_PANIC
 				fimc_is_vender_csi_err_handler(csi);
 				fimc_is_sec_copy_err_cnt_to_file();
 #endif
@@ -906,7 +906,7 @@ static void csi_err_handler(struct fimc_is_device_csi *csi, u32 *err_id)
 			case CSIS_ERR_DMA_ERR_BRESP_ERR:
 				err_str = GET_STR(CSIS_ERR_DMA_ERR_BRESP_ERR);
 #ifdef OVERFLOW_PANIC_ENABLE
-#ifdef USE_CAMERA_HW_BIG_DATA
+#ifdef USE_CAMERA_HW_BIG_DATA_FOR_PANIC
 				fimc_is_vender_csi_err_handler(csi);
 				fimc_is_sec_copy_err_cnt_to_file();
 #endif
@@ -932,8 +932,10 @@ static void csi_err_handler(struct fimc_is_device_csi *csi, u32 *err_id)
 		}
 	}
 
+#ifdef USE_CAMERA_HW_BIG_DATA
 	if (err_str)
 		fimc_is_vender_csi_err_handler(csi);
+#endif
 }
 
 static irqreturn_t csi_isr(int irq, void *data)

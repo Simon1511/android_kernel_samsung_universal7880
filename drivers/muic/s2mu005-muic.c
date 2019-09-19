@@ -60,7 +60,9 @@ static int set_manual_sw(struct s2mu005_muic_data *muic_data, bool on);
 #if defined(DEBUG_MUIC)
 #define MAX_LOG 25
 #define READ 0
+#ifndef WRITE
 #define WRITE 1
+#endif
 
 static u8 s2mu005_log_cnt;
 static u8 s2mu005_log[MAX_LOG][3];

@@ -327,7 +327,7 @@ static ssize_t set_flush(struct device *dev,
 
 	sensor_type = (u8)dTemp;
 	if (!(atomic64_read(&data->aSensorEnable) & (1ULL << sensor_type)))
-		return -EINVAL;
+		ssp_infof("ssp sensor is not enabled(%d)", sensor_type);
 
 	if (flush(data, sensor_type) < 0) {
 		ssp_err("ssp returns error for flush(%x)", sensor_type);
@@ -1129,7 +1129,7 @@ static long ssp_batch_ioctl(struct file *file, unsigned int cmd,
 			   MCU return fail when receive chage delay inst during NO_SENSOR STATE */
 			if (data->aiCheckStatus[sensor_type]
 					== RUNNING_SENSOR_STATE)
-				ret = send_instruction_sync(data, CHANGE_DELAY,
+				ret = send_instruction(data, CHANGE_DELAY,
 						sensor_type, uBuf, 9);
 
 			if (ret > 0) { /* ret 1 is success */
@@ -1138,7 +1138,7 @@ static long ssp_batch_ioctl(struct file *file, unsigned int cmd,
 				data->delay[sensor_type] = batch.delay;
 			}
 		} else { /* real batch, DRY RUN */
-			ret = send_instruction_sync(data, CHANGE_DELAY,
+			ret = send_instruction(data, CHANGE_DELAY,
 						sensor_type, uBuf, 9);
 			if (ret > 0) { /* ret 1 is success */
 				data->batch_opt[sensor_type] = (u8)batch.flag;

@@ -211,6 +211,10 @@ static const char *ccic_id_string(enum ccic_id id)
 		return "ID_WATER";
 	case NOTIFY_ID_VCONN:
 		return "ID_VCONN";
+	case NOTIFY_ID_OTG:
+		return "ID_OTG";
+	case NOTIFY_ID_TA:
+		return "ID_TA";
 	case NOTIFY_ID_DP_CONNECT:
 		return "ID_DP_CONNECT";
 	case NOTIFY_ID_DP_HPD:
@@ -389,6 +393,20 @@ static void print_ccic_event(struct seq_file *m, unsigned long long ts,
 			ccic_id_string(type.id),
 			ccic_dev_string(type.src),
 			ccic_dev_string(type.dest));
+		else if (type.id  == NOTIFY_ID_OTG)
+			seq_printf(m, "[%5lu.%06lu] ccic notify:    id=%s src=%s dest=%s %s\n",
+			(unsigned long)ts, rem_nsec / 1000,
+			ccic_id_string(type.id),
+			ccic_dev_string(type.src),
+			ccic_dev_string(type.dest),
+			type.sub2? "Enable":"Disable");
+		else if (type.id  == NOTIFY_ID_TA)
+			seq_printf(m, "[%5lu.%06lu] ccic notify:    id=%s src=%s dest=%s %s\n",
+			(unsigned long)ts, rem_nsec / 1000,
+			ccic_id_string(type.id),
+			ccic_dev_string(type.src),
+			ccic_dev_string(type.dest),
+			ccic_con_string(type.sub1));
 		else if (type.id  == NOTIFY_ID_DP_CONNECT)
 			seq_printf(m, "[%5lu.%06lu] ccic notify:    id=%s src=%s dest=%s 0x%04x/0x%04x %s\n",
 			(unsigned long)ts, rem_nsec / 1000,
@@ -422,7 +440,7 @@ static void print_ccic_event(struct seq_file *m, unsigned long long ts,
 			type.sub1,
 			type.sub2);
 		else if (type.id  == NOTIFY_ID_ROLE_SWAP)
-			seq_printf(m, "[%5lu.%06lu] ccic notify:	id=%s src=%s dest=%s syb1=%d sub2=%d\n",
+			seq_printf(m, "[%5lu.%06lu] ccic notify:	id=%s src=%s dest=%s sub1=%d sub2=%d\n",
 			(unsigned long)ts, rem_nsec / 1000,
 			ccic_id_string(type.id),
 			ccic_dev_string(type.src),
@@ -483,6 +501,20 @@ static void print_ccic_event(struct seq_file *m, unsigned long long ts,
 			ccic_id_string(type.id),
 			ccic_dev_string(type.src),
 			ccic_dev_string(type.dest));
+		else if (type.id  == NOTIFY_ID_OTG)
+			seq_printf(m, "[%5lu.%06lu] ccic notify:    id=%s src=%s dest=%s %s\n",
+			(unsigned long)ts, rem_nsec / 1000,
+			ccic_id_string(type.id),
+			ccic_dev_string(type.src),
+			ccic_dev_string(type.dest),
+			type.sub2? "Enable":"Disable");
+		else if (type.id  == NOTIFY_ID_TA)
+			seq_printf(m, "[%5lu.%06lu] ccic notify:    id=%s src=%s dest=%s %s\n",
+			(unsigned long)ts, rem_nsec / 1000,
+			ccic_id_string(type.id),
+			ccic_dev_string(type.src),
+			ccic_dev_string(type.dest),
+			ccic_con_string(type.sub1));
 		else if (type.id  == NOTIFY_ID_DP_CONNECT)
 			seq_printf(m, "[%5lu.%06lu] manager notify: id=%s src=%s dest=%s 0x%04x/0x%04x %s\n",
 			(unsigned long)ts, rem_nsec / 1000,

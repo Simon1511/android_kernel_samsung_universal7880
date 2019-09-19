@@ -170,6 +170,8 @@ static enum power_supply_property sec_battery_props[] = {
 	POWER_SUPPLY_PROP_VOLTAGE_AVG,
 	POWER_SUPPLY_PROP_CURRENT_NOW,
 	POWER_SUPPLY_PROP_CURRENT_AVG,
+	POWER_SUPPLY_PROP_CHARGE_FULL,
+	POWER_SUPPLY_PROP_CHARGE_COUNTER,
 	POWER_SUPPLY_PROP_CHARGE_NOW,
 	POWER_SUPPLY_PROP_CAPACITY,
 	POWER_SUPPLY_PROP_TEMP,
@@ -1301,7 +1303,7 @@ static void sec_bat_set_charging_status(struct sec_battery_info *battery,
 
 	switch (status) {
 	case POWER_SUPPLY_STATUS_CHARGING:
-		if (battery->siop_level != 100)
+		if (battery->siop_level < 100 || battery->lcd_status)
 			battery->stop_timer = true;
 		break;
 	case POWER_SUPPLY_STATUS_NOT_CHARGING:
@@ -2041,7 +2043,7 @@ static void sec_bat_aging_check(struct sec_battery_info *battery)
 	int calc_step = -1;
 	bool ret = 0;
 
-	if (battery->pdata->num_age_step <= 0)
+	if (battery->pdata->num_age_step <= 0 || battery->batt_cycle < 0)
 		return;
 
 	if (battery->temperature < 50) {
@@ -6523,6 +6525,18 @@ static int sec_bat_get_property(struct power_supply *psy,
 	case POWER_SUPPLY_PROP_CURRENT_AVG:
 		val->intval = battery->current_avg;
 		break;
+	case POWER_SUPPLY_PROP_CHARGE_COUNTER:
+		psy_do_property(battery->pdata->fuelgauge_name, get,
+				POWER_SUPPLY_PROP_CHARGE_COUNTER, value);
+		val->intval = value.intval;
+		break;
+	case POWER_SUPPLY_PROP_CHARGE_FULL:
+#if defined(CONFIG_BATTERY_CISD)
+		val->intval = battery->pdata->battery_full_capacity * 1000;
+#else
+		val->intval = 0;
+#endif
+		break;
 	/* charging mode (differ from power supply) */
 	case POWER_SUPPLY_PROP_CHARGE_NOW:
 		val->intval = battery->charging_mode;
@@ -7027,7 +7041,10 @@ static int make_pd_list(struct sec_battery_info *battery)
 	bool voltage_flag;
 	int pd_list_index = 0;
 
-	pdo_power_limit = battery->base_charge_power * 1000;
+	pdo_power_limit = (battery->current_event & SEC_BAT_CURRENT_EVENT_HV_DISABLE) ?
+			SEC_INPUT_VOLTAGE_5V * battery->pdata->default_input_current * 1000:
+			battery->base_charge_power * 1000;
+
 	selected_pdo_num = 0;
 	for (i=1; i<= battery->pdic_info.sink_status.available_pdo_num; i++)
 	{
@@ -7616,6 +7633,14 @@ static int sec_bat_parse_dt(struct device *dev,
 		pr_info("%s: np NULL\n", __func__);
 		return 1;
 	}
+
+#if defined(CONFIG_BATTERY_CISD)
+	ret = of_property_read_u32(np, "battery,battery_full_capacity",
+		&pdata->battery_full_capacity);
+	if (ret) {
+		pr_info("%s : battery_full_capacity is Empty\n", __func__);
+	}
+#endif
 
 	ret = of_property_read_u32(np,
 				   "battery,expired_time", &temp);

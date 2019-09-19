@@ -39,6 +39,9 @@
 #include <media/v4l2-subdev.h>
 #include <soc/samsung/exynos-powermode.h>
 #include <soc/samsung/bts.h>
+#ifdef CONFIG_SEC_DEBUG
+#include <linux/sec_debug.h>
+#endif
 
 #include "decon.h"
 #include "dsim.h"
@@ -182,6 +185,64 @@ void decon_dump(struct decon_device *decon)
 	if (acquired)
 		console_unlock();
 }
+
+#ifdef CONFIG_LOGGING_BIGDATA_BUG
+extern unsigned int get_panel_bigdata(struct dsim_device *dsim);
+
+/* Gen Big Data Error for Decon's Bug
+ *
+ * return value
+ * 1. 31 ~ 28 : decon_id
+ * 2. 27 ~ 24 : decon eing pend register
+ * 3. 23 ~ 16 : dsim underrun count
+ * 4. 15 ~  8 : 0x0e panel register
+ * 5.  7 ~  0 : 0x0a panel register
+ * */
+
+static unsigned int gen_decon_bug_bigdata(struct decon_device *decon)
+{
+	struct dsim_device *dsim;
+	unsigned int value, panel_value;
+	unsigned int underrun_cnt = 0;
+
+	/* for decon id */
+	value = decon->id << 28;
+
+	dsim = container_of(decon->output_sd, struct dsim_device, sd);
+
+	if (decon->id == 0) {
+		/* for eint pend value */
+		value |= (decon->eint_pend_cnt & 0x0f) << 24;
+
+		underrun_cnt = decon->underrun_stat.underrun_cnt++;
+
+		if (underrun_cnt > 0xff) {
+			decon_info("%s:dsim underrun exceed 1byte : %d\n",
+					__func__, underrun_cnt);
+			underrun_cnt = 0xff;
+		}
+
+		value |= underrun_cnt << 16;
+
+		/* for panel dump */
+		panel_value = get_panel_bigdata(dsim);
+		value |= panel_value & 0xffff;
+	}
+
+	decon_info("%s:big data : %x\n", __func__, value);
+	return value;
+}
+
+void log_decon_bigdata(struct decon_device *decon)
+{
+	unsigned int bug_err_num;
+
+	bug_err_num = gen_decon_bug_bigdata(decon);
+#ifdef CONFIG_SEC_DEBUG_EXTRA_INFO
+	sec_debug_set_extra_info_decon(bug_err_num);
+#endif
+}
+#endif
 
 /* ---------- CHECK FUNCTIONS ----------- */
 static void decon_win_conig_to_regs_param
@@ -1451,6 +1512,9 @@ int decon_wait_for_vsync(struct decon_device *decon, u32 timeout)
 			decon_err("decon%d wait for vsync timeout(p:0x%x, m:0x%x)\n",
 				decon->id, readl(decon->eint_pend),
 				readl(decon->eint_mask));
+#ifdef CONFIG_LOGGING_BIGDATA_BUG
+				decon->eint_pend_cnt = readl(decon->eint_pend);
+#endif
 		} else {
 			decon_err("decon%d wait for vsync timeout\n", decon->id);
 		}
@@ -2412,8 +2476,12 @@ static void __decon_update_regs(struct decon_device *decon, struct decon_reg_dat
 
 	decon_reg_all_win_shadow_update_req(decon->id);
 	decon_to_psr_info(decon, &psr);
-	if (decon_reg_start(decon->id, &psr) < 0)
+	if (decon_reg_start(decon->id, &psr) < 0) {
+#ifdef CONFIG_LOGGING_BIGDATA_BUG
+		log_decon_bigdata(decon);
+#endif
 		BUG();
+	}
 	DISP_SS_EVENT_LOG(DISP_EVT_TRIG_UNMASK, &decon->sd, ktime_set(0, 0));
 #ifdef CONFIG_DECON_MIPI_DSI_PKTGO
 	if (!decon->id) {
@@ -2640,6 +2708,9 @@ static void decon_update_regs(struct decon_device *decon, struct decon_reg_data 
 		decon_wait_for_vstatus(decon, 50);
 		if (decon_reg_wait_for_update_timeout(decon->id, SHADOW_UPDATE_TIMEOUT) < 0) {
 			decon_dump(decon);
+#ifdef CONFIG_LOGGING_BIGDATA_BUG
+			log_decon_bigdata(decon);
+#endif
 			BUG();
 		}
 
@@ -3304,11 +3375,13 @@ static int decon_ioctl(struct fb_info *info, unsigned int cmd,
 	struct decon_device *decon = win->decon;
 	int ret = 0;
 	u32 crtc;
-	struct fb_event v;
+#ifdef CONFIG_LCD_DOZE_MODE
+	struct fb_event v = {0, };
 	int blank = 0;
 
 	v.info = info;
 	v.data = &blank;
+#endif
 
 	decon_lpd_block_exit(decon);
 
@@ -3402,24 +3475,26 @@ static int decon_ioctl(struct fb_info *info, unsigned int cmd,
 		}
 		switch (decon->pwr_mode) {
 		case DECON_POWER_MODE_DOZE:
+			blank = FB_BLANK_UNBLANK;
 			decon_info("%s: DECON_POWER_MODE_DOZE\n", __func__);
+			decon_notifier_call_chain(DECON_EARLY_EVENT_DOZE, &v);
 			ret = decon_doze_enable(decon);
 			if (ret) {
 				decon_err("%s: failed to decon_doze_enable: %d\n", __func__, ret);
 				ret = 0;
 			}
-			blank = FB_BLANK_UNBLANK;
-			decon_notifier_call_chain(FB_EVENT_BLANK, &v);
+			decon_notifier_call_chain(DECON_EVENT_DOZE, &v);
 			break;
 		case DECON_POWER_MODE_DOZE_SUSPEND:
+			blank = FB_BLANK_POWERDOWN;
 			decon_info("%s: DECON_POWER_MODE_DOZE_SUSPEND\n", __func__);
+			decon_notifier_call_chain(DECON_EARLY_EVENT_DOZE, &v);
 			ret = decon_doze_suspend(decon);
 			if (ret) {
 				decon_err("%s: failed to decon_doze_suspend: %d\n", __func__, ret);
 				ret = 0;
 			}
-			blank = FB_BLANK_POWERDOWN;
-			decon_notifier_call_chain(FB_EVENT_BLANK, &v);
+			decon_notifier_call_chain(DECON_EVENT_DOZE, &v);
 			break;
 		default:
 			decon_info("%s: pwr_mode: %d\n", __func__, decon->pwr_mode);

@@ -31,6 +31,7 @@ typedef enum {
 	MUIC_AFC_IRQ_MRXRDY,
 	MUIC_AFC_IRQ_VBADC,
 	MUIC_AFC_IRQ_MPNACK,
+	MUIC_AFC_IRQ_MRXTRF,
 	MUIC_AFC_IRQ_DONTCARE = 0xff,
 } muic_afc_irq_t;
 

@@ -75,7 +75,7 @@ static void dw_mci_request_end(struct dw_mci *host, struct mmc_request *mrq);
 static struct dw_mci_debug_data dw_mci_debug __cacheline_aligned;
 
 #ifdef CONFIG_MMC_SUPPORT_STLOG
-#include <linux/stlog.h>
+#include <linux/fslog.h>
 #else
 #define ST_LOG(fmt,...)
 #endif

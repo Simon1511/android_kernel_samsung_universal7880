@@ -318,6 +318,8 @@ static ssize_t gadget_dev_desc_UDC_store(struct gadget_info *gi,
 	char *name;
 	int ret;
 
+	pr_info("%s: +++\n", __func__);
+
 	name = kstrdup(page, GFP_KERNEL);
 	if (!name)
 		return -ENOMEM;
@@ -330,6 +332,7 @@ static ssize_t gadget_dev_desc_UDC_store(struct gadget_info *gi,
 		ret = unregister_gadget(gi);
 		if (ret)
 			goto err;
+		kfree(name);
 	} else {
 		if (gi->udc_name) {
 			ret = -EBUSY;
@@ -1358,11 +1361,12 @@ static void purge_configs_funcs(struct gadget_info *gi)
 			list_move_tail(&f->list, &cfg->func_list);
 			if (f->unbind) {
 				dev_err(&gi->cdev.gadget->dev, "unbind function"
-						" '%s'/%p\n", f->name, f);
+						" '%s'/%pK\n", f->name, f);
 				f->unbind(c, f);
 			}
 		}
 		c->next_interface_id = 0;
+		memset(c->interface, 0, sizeof(c->interface));
 		c->superspeed = 0;
 		c->highspeed = 0;
 		c->fullspeed = 0;
@@ -1634,6 +1638,7 @@ static const struct usb_gadget_driver configfs_driver_template = {
 	.unbind         = configfs_composite_unbind,
 #ifdef CONFIG_USB_CONFIGFS_UEVENT
 	.setup          = android_setup,
+	.reset          = android_disconnect,
 	.disconnect     = android_disconnect,
 #else
 	.setup          = composite_setup,
@@ -1759,10 +1764,12 @@ static ssize_t enable_store(struct device *pdev, struct device_attribute *attr,
 		pr_info("%s: Connect gadget: enabled=%d, dev->enabled=%d\n",
 				__func__, enabled, dev->enabled);
 		cdev->next_string_id = 0;
-		if (gadget) {
-			if (gadget->ops)
-				usb_gadget_connect(gadget);
+		if(!gadget) {
+			pr_info("%s: Gadget is NULL: %p\n", __func__, gadget);
+			mutex_unlock(&dev->lock);
+			return -ENODEV;
 		}
+		usb_gadget_connect(gadget);
 		dev->enabled = true;
 	} else if (!enabled && dev->enabled) {
 		pr_info("%s: Disconnect gadget: enabled=%d, dev->enabled=%d\n",
@@ -1823,6 +1830,7 @@ static struct device_attribute *android_usb_attributes[] = {
 	&dev_attr_functions,
 	NULL
 };
+
 #endif
 
 static struct config_group *gadgets_make(
@@ -1885,7 +1893,6 @@ static struct config_group *gadgets_make(
 		goto err;
 
 	dev_set_drvdata(android_device, gi);
-
 	attrs = android_usb_attributes;
 	while ((attr = *attrs++)) {
 		err = device_create_file(android_device, attr);
@@ -1906,7 +1913,6 @@ static struct config_group *gadgets_make(
 	config_group_init_type_name(&gi->group, name,
 				&gadget_root_type);
 	return &gi->group;
-
 err1:
 #ifdef CONFIG_USB_CONFIGFS_UEVENT
 	attrs = android_usb_attributes;
@@ -1932,7 +1938,7 @@ static void gadgets_drop(struct config_group *group, struct config_item *item)
 
 #ifdef CONFIG_USB_CONFIGFS_UEVENT
 	attrs = android_usb_attributes;
-	while ((attr = *attrs++))
+	while((attr = *attrs++))
 		device_remove_file(android_device, attr);
 	device_destroy(android_device->class, android_device->devt);
 #endif
@@ -1962,7 +1968,9 @@ void unregister_gadget_item(struct config_item *item)
 {
 	struct gadget_info *gi = to_gadget_info(item);
 
+	mutex_lock(&gi->lock);
 	unregister_gadget(gi);
+	mutex_unlock(&gi->lock);
 }
 EXPORT_SYMBOL_GPL(unregister_gadget_item);
 

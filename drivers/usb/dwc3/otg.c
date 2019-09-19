@@ -24,7 +24,6 @@
 #include <linux/pm_runtime.h>
 #include <linux/usb/samsung_usb.h>
 #include <linux/phy/phy.h>
-
 #include "core.h"
 #include "otg.h"
 #include "io.h"
@@ -620,7 +619,6 @@ int dwc3_otg_init(struct dwc3 *dwc)
 	struct dwc3_ext_otg_ops	*ops = NULL;
 	u32			reg;
 	int			ret = 0;
-
 	/*
 	 * GHWPARAMS6[10] bit is SRPSupport.
 	 * This bit also reflects DWC_USB3_EN_OTG
@@ -684,7 +682,6 @@ has_ext_otg:
 			return ret;
 		}
 	}
-
 	wake_lock_init(&dotg->wakelock, WAKE_LOCK_SUSPEND, "dwc3-otg");
 
 	ret = sysfs_create_group(&dwc->dev->kobj, &dwc3_otg_attr_group);
@@ -712,7 +709,6 @@ void dwc3_otg_exit(struct dwc3 *dwc)
 
 		return;
 	}
-
 
 has_ext_otg:
 	sysfs_remove_group(&dwc->dev->kobj, &dwc3_otg_attr_group);

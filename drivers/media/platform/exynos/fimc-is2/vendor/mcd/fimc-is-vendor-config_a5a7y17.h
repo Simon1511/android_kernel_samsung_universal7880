@@ -42,6 +42,7 @@
 #endif
 
 #define USE_CAMERA_HW_BIG_DATA
+/* #define USE_CAMERA_HW_BIG_DATA_FOR_PANIC */
 
 #ifdef USE_CAMERA_HW_BIG_DATA
 #define CSI_SCENARIO_SEN_REAR	(0) /* This value follows dtsi */ 

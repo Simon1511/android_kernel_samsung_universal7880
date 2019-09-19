@@ -95,6 +95,12 @@
 #define s5p_mfc_get_enc_slice_type()	MFC_READL(S5P_FIMV_E_SLICE_TYPE)
 #define s5p_mfc_get_enc_pic_count()	MFC_READL(S5P_FIMV_E_PICTURE_COUNT)
 #define s5p_mfc_get_sei_avail_status()	MFC_READL(S5P_FIMV_D_FRAME_PACK_SEI_AVAIL)
+#define s5p_mfc_get_video_signal_type()		((MFC_READL(S5P_FIMV_D_VIDEO_SIGNAL_TYPE)	\
+						>> S5P_FIMV_D_VIDEO_SIGNAL_TYPE_FLAG_SHIFT)	\
+						& S5P_FIMV_D_VIDEO_SIGNAL_TYPE_FLAG_MASK)
+#define s5p_mfc_get_colour_description()	((MFC_READL(S5P_FIMV_D_VIDEO_SIGNAL_TYPE)	\
+						>> S5P_FIMV_D_COLOUR_DESCRIPTION_FLAG_SHIFT)	\
+						& S5P_FIMV_D_COLOUR_DESCRIPTION_FLAG_MASK)
 #define s5p_mfc_get_mvc_num_views()	MFC_READL(S5P_FIMV_D_MVC_NUM_VIEWS)
 #define s5p_mfc_get_mvc_disp_view_id()	(MFC_READL(S5P_FIMV_D_MVC_VIEW_ID)		\
 					& S5P_FIMV_D_MVC_VIEW_ID_DISP_MASK)

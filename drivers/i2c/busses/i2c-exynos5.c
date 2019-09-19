@@ -1783,6 +1783,10 @@ static int exynos5_i2c_probe(struct platform_device *pdev)
 #endif
 	return 0;
 
+	clk_disable(i2c->clk);
+
+	return 0;
+
  err_clk:
 	clk_disable_unprepare(i2c->clk);
 	exynos_update_ip_idle_status(i2c->idle_ip_index, 1);
@@ -1794,6 +1798,8 @@ static int exynos5_i2c_remove(struct platform_device *pdev)
 	struct exynos5_i2c *i2c = platform_get_drvdata(pdev);
 
 	i2c_del_adapter(&i2c->adap);
+
+	clk_unprepare(i2c->clk);
 
 	return 0;
 }
@@ -1812,6 +1818,8 @@ static int exynos5_i2c_suspend_noirq(struct device *dev)
 		exynos_ss_printkl(2, readl(i2c->regs_mailbox + 0x48));
 		exynos_ss_printkl(3, readl(i2c->regs_mailbox + 0x68));
 	}
+
+	clk_unprepare(i2c->clk);
 
 	return 0;
 }

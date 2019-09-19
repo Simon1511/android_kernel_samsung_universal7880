@@ -6,6 +6,26 @@
 #define PD_SID		(0xFF00)
 #define PD_SID_1	(0xFF01)
 
+#define MAX_INPUT_DATA (255)
+#define SEC_UVDM_ALIGN (4)
+#define SEC_UVDM_WAIT_MS (5000)
+#define SEC_UVDM_MAXDATA_FIRST (12)
+#define SEC_UVDM_MAXDATA_NORMAL (16)
+#define SEC_UVDM_CHECKSUM_COUNT (20)
+
+enum uvdm_res_type {
+	RES_INIT = 0,
+	RES_ACK,
+	RES_NAK,
+	RES_BUSY,
+};
+
+enum uvdm_rx_type {
+	RX_ACK = 0,
+	RX_NAK,
+	RX_BUSY,
+};
+
 typedef union {
 	u16 word;
 	u8  byte[2];

@@ -26,6 +26,7 @@
 
 #include "modem_prj.h"
 #include "modem_utils.h"
+#include "modem_klat.h"
 
 static u8 sipc5_build_config(struct io_device *iod, struct link_device *ld,
 			     unsigned int count);
@@ -305,8 +306,6 @@ static int rx_multi_pdp(struct sk_buff *skb)
 	}
 
 	skb->dev = ndev;
-	ndev->stats.rx_packets++;
-	ndev->stats.rx_bytes += skb->len;
 
 	/* check the version of IP */
 	iphdr = (struct iphdr *)skb->data;
@@ -334,6 +333,15 @@ static int rx_multi_pdp(struct sk_buff *skb)
 #if defined(DEBUG_MODEM_IF_IODEV_RX) && defined(DEBUG_MODEM_IF_PS_DATA)
 	log_ipc_pkt(iod->id, IODEV, RX, skb, NULL);
 #endif
+
+	skb_reset_transport_header(skb);
+	skb_reset_network_header(skb);
+
+	/* klat */
+	klat_rx(skb, skbpriv(skb)->sipc_ch - SIPC_CH_ID_PDP_0);
+
+	ndev->stats.rx_packets++;
+	ndev->stats.rx_bytes += skb->len;
 
 	if (in_interrupt())
 		ret = netif_rx(skb);
@@ -1421,9 +1429,9 @@ int sipc5_init_io_device(struct io_device *iod)
 			free_netdev(iod->ndev);
 		}
 
-		mif_debug("iod 0x%p\n", iod);
+		mif_debug("iod 0x%pK\n", iod);
 		vnet = netdev_priv(iod->ndev);
-		mif_debug("vnet 0x%p\n", vnet);
+		mif_debug("vnet 0x%pK\n", vnet);
 		vnet->iod = iod;
 
 		break;

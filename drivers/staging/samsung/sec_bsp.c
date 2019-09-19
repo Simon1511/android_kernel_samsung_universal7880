@@ -31,6 +31,7 @@
 #include <linux/sec_sysfs.h>
 #include <linux/sec_bsp.h>
 #include <linux/slab.h>
+#include <asm/io.h>
 
 struct boot_event {
 	const char *string;
@@ -124,7 +125,7 @@ static int board_id_setup(char *str)
 
 	return 1;
 }
-__setup("androidboot.hw_rev=", board_id_setup);
+__setup("androidboot.revision=", board_id_setup);
 
 static int sec_init_command_proc_show(struct seq_file *m, void *v)
 {

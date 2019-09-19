@@ -51,6 +51,7 @@ typedef enum {
 #endif
 	CCIC_NOTIFY_ID_WATER,
 	CCIC_NOTIFY_ID_VCONN,
+	CCIC_NOTIFY_ID_OTG,
 	CCIC_NOTIFY_ID_TA,
 	CCIC_NOTIFY_ID_DP_CONNECT,
 	CCIC_NOTIFY_ID_DP_HPD,
@@ -60,8 +61,7 @@ typedef enum {
 	CCIC_NOTIFY_ID_FAC,
 } ccic_notifier_id_t;
 
-typedef struct
-{
+typedef struct {
 	uint64_t src:4;
 	uint64_t dest:4;
 	uint64_t id:8;
@@ -74,8 +74,7 @@ typedef struct
 } CC_NOTI_TYPEDEF;
 
 /* ID = 1 : Attach */
-typedef struct
-{
+typedef struct {
 	uint64_t src:4;
 	uint64_t dest:4;
 	uint64_t id:8;
@@ -114,8 +113,7 @@ typedef enum {
 } ccic_notifier_dp_pinconf_t;
 
 /* ID = 2 : RID */
-typedef struct
-{
+typedef struct {
 	uint64_t src:4;
 	uint64_t dest:4;
 	uint64_t id:8;
@@ -139,8 +137,7 @@ typedef enum {
 } ccic_notifier_rid_t;
 
 /* ID = 3 : USB status */
-typedef struct
-{
+typedef struct {
 	uint64_t src:4;
 	uint64_t dest:4;
 	uint64_t id:8;
@@ -165,13 +162,12 @@ typedef struct
 #endif
 } USB_DP_NOTI_TYPEDEF;
 
-typedef enum
-{
+typedef enum {
 	USB_STATUS_NOTIFY_DETACH = 0,
-	USB_STATUS_NOTIFY_ATTACH_DFP = 1, // Host
-	USB_STATUS_NOTIFY_ATTACH_UFP = 2, // Device
-	USB_STATUS_NOTIFY_ATTACH_DRP = 3, // Dual role
-	USB_STATUS_NOTIFY_ATTACH_HPD = 4, // DP : Hot Plugged Detect
+	USB_STATUS_NOTIFY_ATTACH_DFP = 1, /* Host */
+	USB_STATUS_NOTIFY_ATTACH_UFP = 2, /* Device */
+	USB_STATUS_NOTIFY_ATTACH_DRP = 3, /* Dual role */
+	USB_STATUS_NOTIFY_ATTACH_HPD = 4, /* DP : Hot Plugged Detect */
 } USB_STATUS;
 
 /* TODO:  */
@@ -184,7 +180,7 @@ struct ccic_notifier_struct {
 	struct notifier_block (name)
 
 extern int ccic_notifier_notify(CC_NOTI_TYPEDEF *, void *, int);
-//extern void ccic_notifier_255K_test(void);
+/* extern void ccic_notifier_255K_test(void); */
 
 /* ccic notifier register/unregister API
  * for used any where want to receive ccic attached device attach/detach. */
@@ -194,7 +190,7 @@ extern int ccic_notifier_unregister(struct notifier_block *nb);
 extern int ccic_notifier_init(void);
 
 #define CCIC_NOTI_DEST_NUM	(10)
-#define CCIC_NOTI_ID_NUM	(13)
+#define CCIC_NOTI_ID_NUM	(15)
 #define CCIC_NOTI_RID_NUM	(8)
 #define CCIC_NOTI_USB_STATUS_NUM (5)
 

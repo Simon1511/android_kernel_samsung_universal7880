@@ -160,6 +160,11 @@
 #define RID_CTRL_ADC_OFF_SHIFT	1
 #define RID_CTRL_ADC_OFF_MASK	0x1 << RID_CTRL_ADC_OFF_SHIFT
 
+/* S2MU004 MUIC BCD RESCAN (0x6A) */
+#define MUIC_BCD_RESCAN_SHIFT       0
+
+#define MUIC_BCD_RESCAN_MASK        (0x1 << MUIC_BCD_RESCAN_SHIFT)
+
 /*
  * Manual Switch
  * D- [7:5] / D+ [4:2] / CHARGER[1] / OTGEN[0]
@@ -273,7 +278,7 @@ enum s2mu004_muic_adc_mode {
 	S2MU004_ADC_PERIODIC,
 };
 
-typedef enum { 
+typedef enum {
 	S2MU004_WATER_MUIC_IDLE,
 	S2MU004_WATER_MUIC_DET,
 	S2MU004_WATER_MUIC_CCIC_DET,
@@ -327,6 +332,10 @@ struct s2mu004_muic_data {
 	int irq_mpnack;
 	int irq_vbadc;
 	int irq_vdnmon;
+	int irq_mrxtrf;
+	bool is_afcblock_ready;
+	bool is_handling_afc;
+	bool is_mrxtrf_in;
 #endif
 	int retry_cnt;
 	int retry_qc_cnt;
@@ -374,6 +383,7 @@ struct s2mu004_muic_data {
 	struct delayed_work afc_control_ping_retry;
 	struct delayed_work afc_qc_retry;
 	struct delayed_work afc_after_prepare;
+	struct delayed_work prepare_afc_charger;
 	struct delayed_work afc_check_interrupt;
 	struct delayed_work dcd_recheck;
 	struct delayed_work water_detect_handler;
@@ -414,7 +424,7 @@ struct s2mu004_muic_data {
 	u8				status1;
 	u8				status2;
 	u8				status3;
-	u8				status4;	
+	u8				status4;
 
 	/* muic hvcontrol value */
 	u8				hvcontrol1;
@@ -425,5 +435,8 @@ struct s2mu004_muic_data {
 extern struct device *switch_device;
 extern unsigned int system_rev;
 extern struct muic_platform_data muic_pdata;
+
+int s2mu004_muic_get_vbus_state(struct s2mu004_muic_data *muic_data);
+int s2mu004_muic_bcd_rescan(struct s2mu004_muic_data *muic_data);
 
 #endif /* __S2MU004_MUIC_H__ */

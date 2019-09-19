@@ -5,8 +5,10 @@
 #include <linux/ccic/ccic_notifier.h>
 #include <linux/sec_sysfs.h>
 #include <linux/ccic/ccic_sysfs.h>
+#ifdef CONFIG_BATTERY_SAMSUNG
 #ifdef CONFIG_USB_TYPEC_MANAGER_NOTIFIER
 #include <linux/battery/battery_notifier.h>
+#endif
 #endif
 #include <linux/usb_notify.h>
 
@@ -48,6 +50,8 @@ char CCIC_NOTI_ID_Print[CCIC_NOTI_ID_NUM][20] =
     {"ID_POWER_STATUS"},
     {"ID_WATER"},
     {"ID_VCONN"},
+    {"ID_OTG"},
+    {"ID_TA"},
     {"ID_DP_CONNECT"},
     {"ID_DP_HPD"},
     {"ID_DP_LINK_CONF"},
@@ -169,8 +173,9 @@ int ccic_notifier_notify(CC_NOTI_TYPEDEF *p_noti, void *pd, int pdic_attach)
 	ccic_notifier.ccic_template = *p_noti;
 
 	switch (p_noti->id) {
+#ifdef CONFIG_BATTERY_SAMSUNG
 #ifdef CONFIG_USB_TYPEC_MANAGER_NOTIFIER
-	case CCIC_NOTIFY_ID_POWER_STATUS:		// PDIC_NOTIFY_EVENT_PD_SINK
+	case CCIC_NOTIFY_ID_POWER_STATUS:		/* PDIC_NOTIFY_EVENT_PD_SINK */
 		pr_info("%s: src:%01x dest:%01x id:%02x "
 			"attach:%02x cable_type:%02x rprd:%01x\n", __func__,
 			((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->src,
@@ -193,6 +198,7 @@ int ccic_notifier_notify(CC_NOTI_TYPEDEF *p_noti, void *pd, int pdic_attach)
 				((struct pdic_notifier_struct *)pd)->sink_status.selected_pdo_num);
 		}
 		break;
+#endif
 #endif
 	case CCIC_NOTIFY_ID_ATTACH:
 		pr_info("%s: src:%01x dest:%01x id:%02x "
@@ -228,6 +234,9 @@ int ccic_notifier_notify(CC_NOTI_TYPEDEF *p_noti, void *pd, int pdic_attach)
 			((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->id,
 			((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->attach);
 			ccic_uevent_work(CCIC_NOTIFY_ID_WATER, ((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->attach);
+#ifdef CONFIG_SEC_FACTORY
+			return 0;
+#endif
 		break;
 	case CCIC_NOTIFY_ID_VCONN:
 		ccic_uevent_work(CCIC_NOTIFY_ID_VCONN, 0);
@@ -238,6 +247,7 @@ int ccic_notifier_notify(CC_NOTI_TYPEDEF *p_noti, void *pd, int pdic_attach)
 			((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->dest,
 			((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->id,
 			((CC_NOTI_ATTACH_TYPEDEF *)p_noti)->attach);
+		break;
 	default:
 		pr_info("%s: src:%01x dest:%01x id:%02x "
 			"sub1:%d sub2:%02x sub3:%02x\n", __func__,
@@ -279,10 +289,9 @@ int ccic_notifier_init(void)
 	int ret = 0;
 
 	pr_info("%s\n", __func__);
-	if(ccic_notifier_init_done)
-	{
+	if (ccic_notifier_init_done) {
 		pr_err("%s already registered\n", __func__);
-		goto out;	
+		goto out;
 	}
 	ccic_notifier_init_done = 1;
 	ccic_device = sec_device_create(NULL, "ccic");

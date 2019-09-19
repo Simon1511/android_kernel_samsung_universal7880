@@ -107,7 +107,7 @@ void s5p_mfc_dump_regs(struct s5p_mfc_dev *dev)
 		{ 0xC000, 0x84 },
 	};
 
-	pr_err("-----------dumping MFC registers (SFR base = %p, dev = %p)\n",
+	pr_err("-----------dumping MFC registers (SFR base = %pK, dev = %pK)\n",
 				dev->regs_base, dev);
 
 	/* Enable all FW clock gating */
@@ -698,6 +698,7 @@ static void s5p_mfc_handle_frame_new(struct s5p_mfc_ctx *ctx, unsigned int err)
 	unsigned int dst_frame_status, last_frame_status;
 	struct list_head *dst_queue_addr;
 	unsigned int prev_flag, released_flag = 0;
+	unsigned int is_video_signal_type = 0, is_colour_description = 0;
 	int i;
 
 	if (!ctx) {
@@ -750,6 +751,11 @@ static void s5p_mfc_handle_frame_new(struct s5p_mfc_ctx *ctx, unsigned int err)
 	}
 	if (interlaced_cond(ctx))
 		is_interlace = s5p_mfc_is_interlace_picture();
+
+	/* Check whether syntax of video signal type is present or not */
+	is_video_signal_type = s5p_mfc_get_video_signal_type();
+	is_colour_description = s5p_mfc_get_colour_description();
+
 	if (dec->is_dynamic_dpb) {
 		prev_flag = dec->dynamic_used;
 		dec->dynamic_used = mfc_get_dec_used_flag();
@@ -833,6 +839,17 @@ static void s5p_mfc_handle_frame_new(struct s5p_mfc_ctx *ctx, unsigned int err)
 				dst_buf->vb.v4l2_buf.field = V4L2_FIELD_NONE;
 			mfc_debug(2, "is_interlace : %d interlace_type : %d\n",
 				is_interlace, interlace_type);
+
+			if (is_video_signal_type) {
+				dst_buf->vb.v4l2_buf.reserved2 |= (1 << 4);
+				mfc_debug(2, "video signal type parsed\n");
+				if (is_colour_description) {
+					dst_buf->vb.v4l2_buf.reserved2 |= (1 << 2);
+					mfc_debug(2, "matrix coefficients parsed\n");
+					dst_buf->vb.v4l2_buf.reserved2 |= (1 << 3);
+					mfc_debug(2, "colour description parsed\n");
+				}
+			}
 
 			if (ctx->src_fmt->mem_planes == 1) {
 				vb2_set_plane_payload(&dst_buf->vb, 0,
@@ -2058,8 +2075,8 @@ static int s5p_mfc_open(struct file *file)
 #endif
 	}
 
-	mfc_info_ctx("MFC open completed [%d:%d] dev = %p, ctx = %p, version = %d \n",
-			dev->num_drm_inst, dev->num_inst, dev, ctx, MFC_DRIVER_INFO);
+	mfc_info_ctx("MFC open completed [%d:%d] version = %d\n",
+			dev->num_drm_inst, dev->num_inst, MFC_DRIVER_INFO);
 	mutex_unlock(&dev->mfc_mutex);
 	return ret;
 
@@ -2306,8 +2323,7 @@ static int s5p_mfc_release(struct file *file)
 	dev->ctx[ctx->num] = 0;
 	kfree(ctx);
 
-	mfc_info_dev("mfc driver release finished [%d:%d], dev = %p\n",
-			dev->num_drm_inst, dev->num_inst, dev);
+	mfc_info_dev("mfc driver release finished [%d:%d]\n", dev->num_drm_inst, dev->num_inst);
 	mutex_unlock(&dev->mfc_mutex);
 
 	return ret;

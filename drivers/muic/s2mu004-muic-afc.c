@@ -140,6 +140,16 @@ muic_afc_data_t prepare_dupli_to_prepare_dupli = {
 	.next			= &prepare_to_qc_prepare,
 };
 
+muic_afc_data_t prepare_dupli_to_mrxtrf = {
+	.new_dev		= ATTACHED_DEV_QC_CHARGER_PREPARE_MUIC,
+	.afc_name		= "QC charger Prepare",
+	.afc_irq		= MUIC_AFC_IRQ_MRXTRF,
+	.status_vbadc		= VBADC_DONTCARE,
+	.status_vdnmon          = VDNMON_DONTCARE,
+	.function_num		= FUNC_PREPARE_TO_QC_PREPARE,
+	.next			= &prepare_dupli_to_prepare_dupli,
+};
+
 muic_afc_data_t prepare_dupli_to_afc_early_9v = {
 	.new_dev		= ATTACHED_DEV_AFC_CHARGER_9V_MUIC,
 	.afc_name		= "AFC charger 9V (early in mrxrdy)",
@@ -147,7 +157,7 @@ muic_afc_data_t prepare_dupli_to_afc_early_9v = {
 	.status_vbadc		= VBADC_AFC_9V,
 	.status_vdnmon          = VDNMON_DONTCARE,
 	.function_num		= FUNC_PREPARE_DUPLI_TO_AFC_9V,
-	.next			= &prepare_dupli_to_prepare_dupli,
+	.next			= &prepare_dupli_to_mrxtrf,
 };
 
 muic_afc_data_t prepare_dupli_to_afc_9v = {
@@ -341,6 +351,8 @@ struct afc_init_data_s {
 };
 struct afc_init_data_s afc_init_data;
 
+static void s2mu004_mrxtrf_irq_mask(struct s2mu004_muic_data *muic_data, int enable);
+
 bool muic_check_is_hv_dev(struct s2mu004_muic_data *muic_data)
 {
 	bool ret = false;
@@ -458,12 +470,27 @@ void s2mu004_hv_muic_reset_hvcontrol_reg(struct s2mu004_muic_data *muic_data)
 {
 	struct i2c_client *i2c = muic_data->i2c;
 
+	cancel_delayed_work(&muic_data->afc_qc_retry);
+	cancel_delayed_work(&muic_data->prepare_afc_charger);
+	cancel_delayed_work(&muic_data->afc_send_mpnack);
+	cancel_delayed_work(&muic_data->afc_control_ping_retry);
+
 	s2mu004_hv_muic_write_reg(i2c, 0x4b, 0x00);
 	s2mu004_hv_muic_write_reg(i2c, 0x49, 0x00);
 	s2mu004_hv_muic_write_reg(i2c, 0x4a, 0x00);
 	s2mu004_hv_muic_write_reg(i2c, 0x5f, 0x01);
 
-	cancel_delayed_work(&muic_data->afc_send_mpnack);
+	s2mu004_mrxtrf_irq_mask(muic_data, 0);
+
+	msleep(50);
+
+	muic_data->is_afc_muic_prepare = false;
+	s2mu004_muic_set_afc_ready(muic_data, false);
+	muic_data->is_afcblock_ready = false;
+	muic_data->is_handling_afc = false;
+	muic_data->is_mrxtrf_in = false;
+	muic_data->retry_qc_cnt = 0;
+	muic_data->qc_prepare = 0;
 }
 
 void s2mu004_muic_set_afc_ready(struct s2mu004_muic_data *muic_data, bool value)
@@ -492,6 +519,15 @@ static int s2mu004_hv_muic_state_maintain(struct s2mu004_muic_data *muic_data)
 	return ret;
 }
 
+static void s2mu004_mrxtrf_irq_mask(struct s2mu004_muic_data *muic_data, int enable)
+{
+	pr_info("%s: irq enable: %d\n", __func__, enable);
+	if (enable)
+		s2mu004_muic_hv_update_reg(muic_data->i2c, 0x05, 0x00, 0x20, 0);
+	else
+		s2mu004_muic_hv_update_reg(muic_data->i2c, 0x05, 0x20, 0x20, 0);
+}
+
 static void s2mu004_mpnack_irq_mask(struct s2mu004_muic_data *muic_data, int enable)
 {
 	pr_info("%s: irq enable: %d\n", __func__, enable);
@@ -504,14 +540,29 @@ static void s2mu004_mpnack_irq_mask(struct s2mu004_muic_data *muic_data, int ena
 static void s2mu004_hv_muic_set_afc_after_prepare
 					(struct s2mu004_muic_data *muic_data)
 {
+	u8 reg_val = 0;
 	pr_info("%s:%s HV charger is detected\n", MUIC_HV_DEV_NAME, __func__);
 
 	muic_data->retry_cnt = 0;
+	muic_data->is_afcblock_ready = true;
+
 	s2mu004_mpnack_irq_mask(muic_data, 0);
 	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x5f, 0x05);
+
+	s2mu004_read_reg(muic_data->i2c, S2MU004_REG_AFC_INT, &reg_val);
+	pr_info("%s afc_int(%#x)\n", __func__, reg_val);
+	msleep(20);
+	s2mu004_mrxtrf_irq_mask(muic_data, 1);
+
+	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x06);
+	usleep_range(10000, 11000);
 	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x0e);
+
+	cancel_delayed_work(&muic_data->afc_control_ping_retry);
+	cancel_delayed_work(&muic_data->afc_send_mpnack);
+
 	schedule_delayed_work(&muic_data->afc_send_mpnack, msecs_to_jiffies(2000));
-	schedule_delayed_work(&muic_data->afc_control_ping_retry, msecs_to_jiffies(90));
+	schedule_delayed_work(&muic_data->afc_control_ping_retry, msecs_to_jiffies(50));
 }
 
 void s2mu004_muic_afc_after_prepare(struct work_struct *work)
@@ -524,23 +575,86 @@ void s2mu004_muic_afc_after_prepare(struct work_struct *work)
 	mutex_unlock(&muic_data->afc_mutex);
 }
 
+static void s2mu004_muic_afc_xiaomi_retry(struct s2mu004_muic_data *muic_data)
+{
+	u8 vdnmon = 0;
+	u8 reg_val = 0, maskRead_val = 0, maskWrite_val = 0;
+	int i;
+
+	pr_info("%s\n", __func__);
+
+	/* Mask vdnmon_INT */
+	s2mu004_read_reg(muic_data->i2c, S2MU004_REG_AFC_INT_MASK, &maskRead_val);
+	maskWrite_val = maskRead_val | 0x2;
+	s2mu004_hv_muic_write_reg(muic_data->i2c, S2MU004_REG_AFC_INT_MASK, maskWrite_val);
+	msleep(20);
+
+	/* Reset xiaomi battery pack*/
+	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x5f, 0x05);
+	s2mu004_hv_muic_write_reg(muic_data->i2c, S2MU004_REG_AFC_CTRL1, 0x00);
+	msleep(20);
+
+	/* Prepare afc block */
+	reg_val = (HVCONTROL1_AFCEN_MASK | HVCONTROL1_VBUSADCEN_MASK |
+			HVCONTROL1_DPDNVDEN_MASK);
+	s2mu004_hv_muic_write_reg(muic_data->i2c, S2MU004_REG_AFC_CTRL1, reg_val);
+	msleep(20);
+	s2mu004_hv_muic_write_reg(muic_data->i2c, S2MU004_REG_AFC_CTRL2, HVCONTROL2_DP06EN_MASK);
+
+	for (i = 0; i < 5; i++) {
+		msleep(350);
+		s2mu004_read_reg(muic_data->i2c, S2MU004_REG_AFC_STATUS, &vdnmon);
+		if ((vdnmon & STATUS_VDNMON_MASK) == VDNMON_LOW)
+			break;
+	}
+	if (i == 5) {
+		pr_info("%s retry fail vdnmon(%#x)\n", __func__, vdnmon);
+		goto RETRY_FAIL;
+	}
+
+	/* Retry qc 9V */
+	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x5f, 0x01);
+	s2mu004_hv_muic_write_reg(muic_data->i2c, S2MU004_REG_AFC_CTRL1, 0xbd);
+	msleep(20);
+
+RETRY_FAIL:
+	/* Restore mask vdnmon_INT */
+	s2mu004_hv_muic_write_reg(muic_data->i2c, S2MU004_REG_AFC_INT_MASK, maskRead_val);
+}
+
 #define RETRY_QC_CNT 3
 void s2mu004_muic_afc_qc_retry(struct work_struct *work)
 {
 	struct s2mu004_muic_data *muic_data =
 		container_of(work, struct s2mu004_muic_data, afc_qc_retry.work);
-	pr_err("[DEBUG] %s retry_qc_cnt : (%d) \n " , __func__, muic_data->retry_qc_cnt);
+	u8 vbadc, vbvolt = s2mu004_muic_get_vbus_state(muic_data);
+
+	s2mu004_read_reg(muic_data->i2c, S2MU004_REG_AFC_STATUS, &vbadc);
+	vbadc &= STATUS_VBADC_MASK;
+
+	cancel_delayed_work(&muic_data->afc_qc_retry);
+	if (vbadc == VBADC_8_7V_9_3V || !vbvolt) {
+		pr_info("%s skip vbadc(%#x), vbvolt(%d)\n", __func__, vbadc, vbvolt);
+		muic_data->retry_qc_cnt = 0;
+		muic_data->qc_prepare = 0;
+		return;
+	}
+
+	pr_info("%s retry_qc_cnt : (%d)\n", __func__, muic_data->retry_qc_cnt);
 	if (muic_data->retry_qc_cnt < RETRY_QC_CNT) {
+		if (muic_data->is_mrxtrf_in) {
+			s2mu004_muic_afc_xiaomi_retry(muic_data);
+		} else {
+			s2mu004_hv_muic_write_reg(muic_data->i2c, 0x49, 0x00);
+			msleep(20);
+			s2mu004_hv_muic_write_reg(muic_data->i2c, 0x49, 0xbd);
+		}
 		muic_data->retry_qc_cnt++;
-		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x49, 0x00); //3
-		msleep(10);
-		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x49, 0xbd); //3
 		schedule_delayed_work(&muic_data->afc_qc_retry, msecs_to_jiffies(100));
 	} else {
 		muic_data->retry_qc_cnt = 0;
 		muic_data->qc_prepare = 0;
 	}
-
 }
 
 #define RETRY_PING_CNT 20
@@ -552,6 +666,8 @@ static void s2mu004_muic_afc_control_ping_retry(struct work_struct *work)
 
 	if (muic_data->retry_cnt <  RETRY_PING_CNT) {
 		muic_data->retry_cnt++;
+		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x06);
+		usleep_range(10000, 11000);
 		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x0e);
 		schedule_delayed_work(&muic_data->afc_control_ping_retry, msecs_to_jiffies(90));
 	} else {
@@ -572,6 +688,8 @@ static void s2mu004_hv_muic_afc_control_ping
 		cancel_delayed_work(&muic_data->afc_control_ping_retry);
 		cancel_delayed_work(&muic_data->afc_send_mpnack);
 		msleep(30);
+		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x06);
+		usleep_range(10000, 11000);
 		ret = s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x0e); //3
 		schedule_delayed_work(&muic_data->afc_send_mpnack, msecs_to_jiffies(2000));
 		schedule_delayed_work(&muic_data->afc_control_ping_retry, msecs_to_jiffies(90));
@@ -624,8 +742,12 @@ static int s2mu004_hv_muic_handle_attach
 		}
 		break;
 	case FUNC_PREPARE_TO_QC_PREPARE:
+		if (muic_data->is_afcblock_ready == false)
+			return ret;
 		muic_data->afc_count = 0;
+		muic_data->retry_qc_cnt = 0;
 		muic_data->qc_prepare = 1;
+		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4A, 0x06);
 		msleep(60);
 		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x5f, 0x01); //3
 		s2mu004_hv_muic_write_reg(muic_data->i2c, 0x49, 0xbd); //3
@@ -863,6 +985,8 @@ static bool muic_check_hv_irq
 		afc_irq = MUIC_AFC_IRQ_VDNMON;
 	else if (irq == muic_data->irq_mpnack)
 		afc_irq = MUIC_AFC_IRQ_MPNACK;
+	else if (irq == muic_data->irq_mrxtrf)
+		afc_irq = MUIC_AFC_IRQ_MRXTRF;
 	else {
 		pr_err("%s:%s cannot find irq #(%d)\n", MUIC_HV_DEV_NAME, __func__, irq);
 		ret = false;
@@ -1334,23 +1458,56 @@ void s2mu004_muic_afc_send_mpnack(struct work_struct *work)
 }
 
 /* TA setting in s2mu004-muic.c */
-void s2mu004_muic_prepare_afc_charger(struct s2mu004_muic_data *muic_data)
+void s2mu004_muic_prepare_afc_charger(struct work_struct *work)
 {
+	struct s2mu004_muic_data *muic_data =
+		container_of(work, struct s2mu004_muic_data, prepare_afc_charger.work);
 	struct i2c_client *i2c = muic_data->i2c;
+	u8 reg_val = 0, vdnmon = 0;
+	int i = 0;
 
-	pr_info("%s:%s \n", MUIC_DEV_NAME, __func__);
+	if (muic_data->is_handling_afc)
+		return;
 
-	msleep(200);
-	s2mu004_write_reg(i2c, 0x49, 0xa0);
+	pr_info("%s\n", __func__);
+	muic_data->is_handling_afc = true;
+
+	reg_val = (HVCONTROL1_AFCEN_MASK | HVCONTROL1_VBUSADCEN_MASK);
+	s2mu004_hv_muic_write_reg(i2c, S2MU004_REG_AFC_CTRL1, reg_val);
 
 	/* Set TX DATA */
 	muic_data->tx_data = (HVTXBYTE_9V << 4) | HVTXBYTE_1_65A;
-	s2mu004_write_reg(i2c, S2MU004_REG_TX_BYTE1, 0x46);
-	s2mu004_write_reg(i2c, 0x49, 0xa1);
-	s2mu004_write_reg(i2c, 0x4a, 0x06);
-	s2mu004_muic_set_afc_ready(muic_data, true);
+	s2mu004_hv_muic_write_reg(i2c, S2MU004_REG_TX_BYTE1, muic_data->tx_data);
 
-	return;
+	reg_val = (HVCONTROL1_AFCEN_MASK | HVCONTROL1_VBUSADCEN_MASK |
+			HVCONTROL1_DPDNVDEN_MASK);
+	s2mu004_hv_muic_write_reg(i2c, S2MU004_REG_AFC_CTRL1, reg_val);
+
+	s2mu004_hv_muic_write_reg(i2c, S2MU004_REG_AFC_CTRL2, HVCONTROL2_DNRESEN_MASK);
+
+	for (i = 0; i < 10; i++) {
+		msleep(130);
+		s2mu004_read_reg(muic_data->i2c, S2MU004_REG_AFC_STATUS, &vdnmon);
+		pr_info("%s vdnmon(%#x)\n", __func__, vdnmon);
+		if ((vdnmon & STATUS_VDNMON_MASK) == VDNMON_LOW) {
+			s2mu004_muic_set_afc_ready(muic_data, true);
+			s2mu004_hv_muic_write_reg(i2c, S2MU004_REG_AFC_CTRL2, HVCONTROL2_DP06EN_MASK);
+			return;
+		}
+	}
+
+	/* To check pre-condition for xiaomi battery pack */
+	s2mu004_muic_bcd_rescan(muic_data);
+	for (i = 0; i < 5; i++) {
+		msleep(100);
+		s2mu004_read_reg(muic_data->i2c, S2MU004_REG_AFC_STATUS, &vdnmon);
+		pr_info("%s vdnmon(%#x)\n", __func__, vdnmon);
+		if ((vdnmon & STATUS_VDNMON_MASK) == VDNMON_LOW) {
+			s2mu004_muic_set_afc_ready(muic_data, true);
+			s2mu004_hv_muic_write_reg(i2c, S2MU004_REG_AFC_CTRL2, HVCONTROL2_DP06EN_MASK);
+			return;
+		}
+	}
 }
 
 /* TA setting in s2mu004-muic.c */
@@ -1629,9 +1786,12 @@ static irqreturn_t s2mu004_muic_hv_irq(int irq, void *data)
 			}
 		}
 		/* After ping , if there is response then cancle mpnack work */
-		if ((irq == muic_data->irq_mrxrdy) || (irq == muic_data->irq_mpnack)) {
+		if ((irq == muic_data->irq_mrxrdy) || (irq == muic_data->irq_mpnack) ||
+				(irq == muic_data->irq_mrxtrf)) {
 			cancel_delayed_work(&muic_data->afc_send_mpnack);
 			cancel_delayed_work(&muic_data->afc_control_ping_retry);
+				if (irq == muic_data->irq_mrxtrf)
+					muic_data->is_mrxtrf_in = true;
 		}
 
 		if ((irq == muic_data->irq_vbadc) && (muic_data->qc_prepare == 1)) {
@@ -1683,10 +1843,13 @@ int s2mu004_afc_muic_irq_init(struct s2mu004_muic_data *muic_data)
 		muic_data->irq_mpnack = irq_base + S2MU004_AFC_IRQ_MPNack;
 		REQUEST_HV_IRQ(muic_data->irq_mpnack, muic_data, "muic-mpnack");
 
-		pr_info("%s:%s dnres(%d), mrxrdy(%d), mpnack(%d), vbadc(%d), vdnmon(%d)\n",
-				MUIC_HV_DEV_NAME, __func__,
+		muic_data->irq_mrxtrf = irq_base + S2MU004_AFC_IRQ_MRxTrf;
+		REQUEST_HV_IRQ(muic_data->irq_mrxtrf, muic_data, "muic-mrxtrf");
+
+		pr_info("mrxrdy(%d), mpnack(%d), vbadc(%d), vdnmon(%d) mrxtrf(%d)\n",
 				muic_data->irq_dnres, muic_data->irq_mrxrdy,
-				muic_data->irq_mpnack, muic_data->irq_vbadc, muic_data->irq_vdnmon);
+				muic_data->irq_vbadc, muic_data->irq_vdnmon,
+				muic_data->irq_mrxtrf);
 	}
 
 	return ret;
@@ -1711,6 +1874,7 @@ void s2mu004_hv_muic_free_irqs(struct s2mu004_muic_data *muic_data)
 	FREE_HV_IRQ(muic_data->irq_mrxrdy, muic_data, "muic-mrxrdy");
 	FREE_HV_IRQ(muic_data->irq_mpnack, muic_data, "muic-mpnack");
 	FREE_HV_IRQ(muic_data->irq_vbadc, muic_data, "muic-vbadc");
+	FREE_HV_IRQ(muic_data->irq_mrxtrf, muic_data, "muic-mrxtrf");
 }
 #if 0
 #if defined(CONFIG_OF)
@@ -1748,7 +1912,10 @@ void s2mu004_hv_muic_initialize(struct s2mu004_muic_data *muic_data)
 	muic_data->is_afc_muic_prepare = false;
 	muic_data->is_charger_ready = true;
 	muic_data->pdata->afc_disable = false;
-	
+	muic_data->is_afcblock_ready = false;
+	muic_data->is_handling_afc = false;
+	muic_data->is_mrxtrf_in = false;
+
 	s2mu004_write_reg(muic_data->i2c, 0xd8, 0x84); /* OTP */
 	s2mu004_write_reg(muic_data->i2c, 0x2c, 0x55); /* OTP */
 	s2mu004_write_reg(muic_data->i2c, 0xc3, 0x88); /* OTP */
@@ -1757,6 +1924,8 @@ void s2mu004_hv_muic_initialize(struct s2mu004_muic_data *muic_data)
 	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x49, 0x00);
 	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x4a, 0x00);
 	s2mu004_hv_muic_write_reg(muic_data->i2c, 0x5f, 0x01);
+
+	s2mu004_mrxtrf_irq_mask(muic_data, 0);
 
 	afc_init_data.muic_data = muic_data;
 	INIT_WORK(&afc_init_data.muic_afc_init_work, s2mu004_hv_muic_detect_after_charger_init);
@@ -1768,6 +1937,7 @@ void s2mu004_hv_muic_initialize(struct s2mu004_muic_data *muic_data)
 	INIT_DELAYED_WORK(&muic_data->afc_control_ping_retry, s2mu004_muic_afc_control_ping_retry);
 	INIT_DELAYED_WORK(&muic_data->afc_qc_retry, s2mu004_muic_afc_qc_retry);
 	INIT_DELAYED_WORK(&muic_data->afc_after_prepare, s2mu004_muic_afc_after_prepare);
+	INIT_DELAYED_WORK(&muic_data->prepare_afc_charger, s2mu004_muic_prepare_afc_charger);
 
 	mutex_init(&muic_data->afc_mutex);
 }

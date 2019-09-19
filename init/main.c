@@ -111,9 +111,6 @@ static int kernel_init(void *);
 extern void init_IRQ(void);
 extern void fork_init(unsigned long);
 extern void radix_tree_init(void);
-#ifndef CONFIG_DEBUG_RODATA
-static inline void mark_rodata_ro(void) { }
-#endif
 
 /*
  * Debug helper: via this flag we know that we are in 'early bootup code'
@@ -537,7 +534,7 @@ static void rkp_init(void)
 	init.rkp_pgt_bitmap = (u64)__pa(rkp_pgt_bitmap);
 	init.rkp_map_bitmap = (u64)__pa(rkp_map_bitmap);
 	init.rkp_pgt_bitmap_size = RKP_PGT_BITMAP_LEN;
-	init.zero_pg_addr = page_to_phys(empty_zero_page);
+	init.zero_pg_addr = (u64)__pa(empty_zero_page);
 	init._text = (u64) _text;
 	init._etext = (u64) _etext;
 	if (!vmm_extra_mem) {
@@ -653,6 +650,10 @@ asmlinkage __visible void __init start_kernel(void)
 		local_irq_disable();
 	idr_init_cache();
 	rcu_init();
+
+	/* trace_printk() and trace points may be used after this */
+	trace_init();
+
 	context_tracking_init();
 	radix_tree_init();
 	/* init some links before init_ISA_irqs() */
@@ -752,6 +753,7 @@ asmlinkage __visible void __init start_kernel(void)
 
 	check_bugs();
 
+	acpi_subsystem_init();
 	sfi_init_late();
 
 	if (efi_enabled(EFI_RUNTIME_SERVICES)) {
@@ -1012,28 +1014,28 @@ static int run_init_process(const char *init_filename)
 extern initcall_t __deferred_initcall_start[], __deferred_initcall_end[];
 
 /* call deferred init routines */
-void __ref do_deferred_initcalls(void)
+static void __ref do_deferred_initcalls(struct work_struct *work)
 {
 	initcall_t *call;
-	static int already_run=0;
+	static bool already_run;
 
 	if (already_run) {
-		printk("do_deferred_initcalls() has already run\n");
+		pr_warn("%s() has already run\n", __func__);
 		return;
 	}
 
-	already_run=1;
+	already_run = true;
 
-	printk("Running do_deferred_initcalls()\n");
+	pr_err("Running %s()\n", __func__);
 
-	for(call = __deferred_initcall_start;
-	    call < __deferred_initcall_end; call++)
+	for (call = __deferred_initcall_start;
+			call < __deferred_initcall_end; call++)
 		do_one_initcall(*call);
-
-	flush_scheduled_work();
 
 	free_initmem();
 }
+
+static DECLARE_WORK(deferred_initcall_work, do_deferred_initcalls);
 #endif
 
 static int try_to_run_init_process(const char *init_filename)
@@ -1056,6 +1058,28 @@ extern void gpio_dvs_check_initgpio(void);
  
 static noinline void __init kernel_init_freeable(void);
 
+#ifdef CONFIG_DEBUG_RODATA
+static bool rodata_enabled = true;
+static int __init set_debug_rodata(char *str)
+{
+	return strtobool(str, &rodata_enabled);
+}
+__setup("rodata=", set_debug_rodata);
+
+static void mark_readonly(void)
+{
+	if (rodata_enabled)
+		mark_rodata_ro();
+	else
+		pr_info("Kernel memory protection disabled.\n");
+}
+#else
+static inline void mark_readonly(void)
+{
+	pr_warn("This architecture does not have kernel memory protection.\n");
+}
+#endif
+
 static int __ref kernel_init(void *unused)
 {
 	int ret;
@@ -1075,7 +1099,7 @@ static int __ref kernel_init(void *unused)
 #ifndef CONFIG_DEFERRED_INITCALLS
 	free_initmem();
 #endif
-	mark_rodata_ro();
+	mark_readonly();
 	system_state = SYSTEM_RUNNING;
 	numa_default_policy();
 
@@ -1083,8 +1107,12 @@ static int __ref kernel_init(void *unused)
 
 	if (ramdisk_execute_command) {
 		ret = run_init_process(ramdisk_execute_command);
-		if (!ret)
+		if (!ret) {
+#ifdef CONFIG_DEFERRED_INITCALLS
+			schedule_work(&deferred_initcall_work);
+#endif
 			return 0;
+		}
 		pr_err("Failed to execute %s (error %d)\n",
 		       ramdisk_execute_command, ret);
 	}
@@ -1097,8 +1125,12 @@ static int __ref kernel_init(void *unused)
 	 */
 	if (execute_command) {
 		ret = run_init_process(execute_command);
-		if (!ret)
+		if (!ret) {
+#ifdef CONFIG_DEFERRED_INITCALLS
+			schedule_work(&deferred_initcall_work);
+#endif
 			return 0;
+		}
 		pr_err("Failed to execute %s (error %d).  Attempting defaults...\n",
 			execute_command, ret);
 	}

@@ -88,6 +88,22 @@
 			gpio-key,wakeup = <1>;
 		};
 	};
+	
+	firmware {
+		android {
+			compatible = "android,firmware";
+			fstab {
+				compatible = "android,fstab";
+				system {
+					compatible = "android,system";
+					dev = "/dev/block/platform/13540000.dwmmc0/by-name/SYSTEM";
+					type = "ext4";
+					mnt_flags = "ro,errors=panic,noload";
+					fsmgr_flags = "wait,verify";
+				};
+			};
+		};
+	};
 
 	pinctrl@139B0000 {
 		/* Warm reset information from AP */
@@ -835,7 +851,7 @@
 		gpios = <&gpd2 2 0xf>; /* DISP_TE */
 		/* gpio_det = <&gpa0 1 0x1>; */
 		gpio_pcd = <&gpa1 5 0x1>;
-		/* gpio_err = <&gpa2 4 0x2>; */
+		/* gpio_err = <&gpa2 4 0x0>; */
 
 		te_eint {
 			/* NWEINT_GPD2_PEND(GPD2_2), NWEINT_GPD2_MASK(GPD2_2) */
