@@ -31,7 +31,7 @@
 	fixed-rate-clocks {
 		oscclk {
 			compatible = "samsung,exynos7880-oscclk";
-			clock-frequency = <26000000>;
+			clock-frequency = <29000000>;
 		};
 	};
 
