@@ -83,7 +83,7 @@ static const unsigned freqs[] = { 400000, 300000, 200000, 100000 };
  * echo 1 > /sys/module/mmc_core/parameters/crc (Enabled)
   */
 
-int use_spi_crc = 1;
+int use_spi_crc = 0;
 EXPORT_SYMBOL(use_spi_crc);
 module_param_named(crc, use_spi_crc, int, 0644);
 MODULE_PARM_DESC(
