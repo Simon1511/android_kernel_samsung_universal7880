@@ -180,7 +180,7 @@
 				desc = "non-boot cluster cpu sleep";
 				compatible = "exynos,idle-state";
 				arm,psci-suspend-param = <0x0010000>;
-				entry-latency-us = <35>;
+				entry-latency-us = <30>;
 				exit-latency-us = <90>;
 				min-residency-us = <750>;
 				status = "okay";
