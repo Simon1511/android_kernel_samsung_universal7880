@@ -105,9 +105,8 @@
               compatible = "android,efs";
               dev = "/dev/block/platform/13540000.dwmmc0/by-name/EFS";
               type = "ext4";
-              mnt_flags = "nosuid,nodev,noatime,noauto_da_alloc,discard,journal_async_commit,errors=panic";
+              mnt_flags = "noatime,nosuid,nodev,noauto_da_alloc,discard,journal_async_commit,data=ordered,errors=panic";
               fsmgr_flags = "wait,check";
-              status = "ok";
             }; 
           };
         };
