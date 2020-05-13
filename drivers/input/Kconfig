@@ -233,6 +233,15 @@ config SENSORS_HALL_FOLDER
 	help
 	  Say Y here to use HALL IC for FOLDER.
 
+config HALL_EVENT_REVERSE
+	tristate "Adjusting the status value of HALL IC"
+	default y
+	help
+	  Adjusting the status value of HALL IC.
+	  This was required from input FW.
+
+	  If unsure, say N.
+
 comment "Input Device Drivers"
 
 source "drivers/input/keyboard/Kconfig"
