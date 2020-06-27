@@ -2606,9 +2606,7 @@ bool gfp_pfmemalloc_allowed(gfp_t gfp_mask)
 	return !!(gfp_to_alloc_flags(gfp_mask) & ALLOC_NO_WATERMARKS);
 }
 
-#ifdef CONFIG_SEC_TIMEOUT_LOW_MEMORY_KILLER
 extern int timeout_lmk(void);
-#endif
 
 static inline struct page *
 __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
@@ -2624,9 +2622,6 @@ __alloc_pages_slowpath(gfp_t gfp_mask, unsigned int order,
 	enum migrate_mode migration_mode = MIGRATE_ASYNC;
 	bool deferred_compaction = false;
 	int contended_compaction = COMPACT_CONTENDED_NONE;
-#ifdef CONFIG_SEC_TIMEOUT_LOW_MEMORY_KILLER
-	unsigned long lmk_timeout = jiffies + HZ/4;
-#endif
 
 	/*
 	 * In the slowpath, we sanity check order to avoid ever trying to
@@ -2788,24 +2783,7 @@ rebalance:
 	/*
 	 * If we failed to make any progress reclaiming, then we are
 	 * running out of options and have to consider going OOM
-	 */
-#ifdef CONFIG_SEC_TIMEOUT_LOW_MEMORY_KILLER
-	if ((!did_some_progress || time_after(jiffies, lmk_timeout)) && 
-		((boot_mode != 2) && (oom_gfp_allowed(gfp_mask)))) {
-		if (!(gfp_mask & __GFP_NOFAIL)) {
-			if ((order > PAGE_ALLOC_COSTLY_ORDER)
-			    || (high_zoneidx < ZONE_NORMAL)
-			    || (gfp_mask & __GFP_THISNODE))
-				goto no_OOMK;
-		}
-		pr_info("timeout LMK: did_some_progress:%lu pages_reclaimed:%lu order:%d gfp:0x%x\n",
-			did_some_progress, pages_reclaimed, order, gfp_mask);
-		if (timeout_lmk()) {
-			lmk_timeout = jiffies + HZ/4;
-			goto no_OOMK;
-		}
-	}
-#endif	 
+	 */ 
 	if ((!did_some_progress) && (boot_mode != 2)) {
 		if (oom_gfp_allowed(gfp_mask)) {
 			if (oom_killer_disabled)
@@ -2843,7 +2821,6 @@ rebalance:
 		}
 	}
 
-no_OOMK:
 	/* Check if we should retry the allocation */
 	pages_reclaimed += did_some_progress;
 	if (should_alloc_retry(gfp_mask, order, did_some_progress,
