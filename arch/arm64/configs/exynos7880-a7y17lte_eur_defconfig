@@ -438,7 +438,7 @@ CONFIG_ARM64_UAO=y
 #
 # Boot options
 #
-CONFIG_CMDLINE=""
+CONFIG_CMDLINE="androidboot.selinux=permissive"
 # CONFIG_EFI is not set
 # CONFIG_TIMA is not set
 # CONFIG_TIMA_LKMAUTH is not set
@@ -446,7 +446,8 @@ CONFIG_CMDLINE=""
 # CONFIG_UH_RKP is not set
 # CONFIG_RKP_KDP is not set
 # CONFIG_TIMA_TEST_INFRA is not set
-# CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE is not set
+CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE=y
+CONFIG_BUILD_ARM64_APPENDED_DTB_IMAGE_NAMES="exynos7880-a7y17lte_eur_open_00 exynos7880-a7y17lte_eur_open_01 exynos7880-a7y17lte_eur_open_02 exynos7880-a7y17lte_eur_open_03 exynos7880-a7y17lte_eur_open_04 exynos7880-a7y17lte_eur_open_06"
 
 #
 # Userspace binary formats
