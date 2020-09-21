@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: GPL-2.0
-dtb-$(CONFIG_SOC_EXYNOS7880) += \
+dtb-$(CONFIG_MACH_EXYNOS7880_A5Y17LTE_EUR_OPEN) := \
 	exynos7880-a5y17lte_eur_open_00.dtb \
 	exynos7880-a5y17lte_eur_open_01.dtb \
 	exynos7880-a5y17lte_eur_open_02.dtb \
@@ -8,7 +8,7 @@ dtb-$(CONFIG_SOC_EXYNOS7880) += \
 	exynos7880-a5y17lte_eur_open_07.dtb \
 	exynos7880-a5y17lte_eur_open_08.dtb
 
-dtb-$(CONFIG_SOC_EXYNOS7880) += \
+dtb-$(CONFIG_MACH_EXYNOS7880_A7Y17LTE_EUR_OPEN) := \
 	exynos7880-a7y17lte_eur_open_00.dtb \
 	exynos7880-a7y17lte_eur_open_01.dtb \
 	exynos7880-a7y17lte_eur_open_02.dtb \
