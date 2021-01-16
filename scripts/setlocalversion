@@ -72,10 +72,8 @@ scm_version()
 			printf -- '-svn%s' "`git svn find-rev $head`"
 		fi
 
-		# Check for uncommitted changes
-		if git diff-index --name-only HEAD | grep -qv "^scripts/package"; then
-			printf '%s' -rise
-		fi
+		# Always append this to localversion
+		printf '%s' -rise
 
 		# All done with git
 		return
