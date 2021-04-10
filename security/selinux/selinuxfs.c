@@ -208,7 +208,7 @@ static ssize_t sel_write_enforce(struct file *file, const char __user *buf,
 #endif
 // ] SEC_SELINUX_PORTING_COMMON
 	length = count;
-	
+
 #if defined(CONFIG_TZ_ICCC)
 	if (selinux_enabled && selinux_enforcing) {
 		if (0 != Iccc_SaveData_Kernel(SELINUX_STATUS,0x0)) {
@@ -1941,7 +1941,11 @@ static struct kobject *selinuxfs_kobj;
 static int __init init_sel_fs(void)
 {
 	int err;
-
+// [ SEC_SELINUX_PORTING_COMMON
+#ifdef CONFIG_ALWAYS_ENFORCE
+	selinux_enabled = 1;
+#endif
+// ] SEC_SELINUX_PORTING_COMMON
 	if (!selinux_enabled)
 		return 0;
 
