@@ -1066,6 +1066,7 @@ static ssize_t sec_nfc_test_store(struct class *dev,
 static CLASS_ATTR(test, 0664, sec_nfc_test_show, sec_nfc_test_store);
 #endif
 
+#ifdef CONFIG_Q_NFC
 static ssize_t sec_nfc_support_show(struct class *class,
 					struct class_attribute *attr,
 					char *buf)
@@ -1074,6 +1075,7 @@ static ssize_t sec_nfc_support_show(struct class *class,
 	return 0;
 }
 static CLASS_ATTR(nfc_support, 0444, sec_nfc_support_show, NULL);
+#endif
 
 static int __devinit __sec_nfc_probe(struct device *dev)
 {
@@ -1149,6 +1151,8 @@ static int __devinit __sec_nfc_probe(struct device *dev)
 			pr_err("NFC: failed to create attr_test\n");
 	}
 #endif
+
+#ifdef CONFIG_Q_NFC
 	nfc_class = class_create(THIS_MODULE, "nfc");
 	if (IS_ERR(&nfc_class))
 		pr_err("NFC: failed to create nfc class\n");
@@ -1157,6 +1161,7 @@ static int __devinit __sec_nfc_probe(struct device *dev)
 		if (ret)
 			pr_err("NFC: failed to create attr_nfc_support\n");
 	}
+#endif
 
 	dev_dbg(dev, "%s: success\n", __func__);
 

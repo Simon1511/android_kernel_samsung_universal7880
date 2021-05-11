@@ -120,6 +120,12 @@ config ESE_SECURE_GPIO
         string "gpio group for ese"
 
 
+config Q_NFC
+	bool "Q NFC Driver"
+	default n
+	help
+	  This enables the newer NFC driver.
+
 source "drivers/nfc/pn544/Kconfig"
 source "drivers/nfc/microread/Kconfig"
 source "drivers/nfc/nfcmrvl/Kconfig"
