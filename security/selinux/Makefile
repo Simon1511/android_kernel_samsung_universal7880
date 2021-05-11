@@ -2,6 +2,7 @@
 # Makefile for building the SELinux module as part of the kernel tree.
 #
 
+ifndef CONFIG_FORCE_PERMISSIVE
 # [ SEC_SELINUX_PORTING_COMMON
 ifeq ($(TARGET_BUILD_VARIANT), eng)
 ifeq ($(SEC_BUILD_OPTION_PRODUCT_SHIP), false)
@@ -19,6 +20,7 @@ endif
 endif
 endif
 # ] SEC_SELINUX_PORTING_COMMON
+endif
 
 obj-$(CONFIG_SECURITY_SELINUX) := selinux.o
 
