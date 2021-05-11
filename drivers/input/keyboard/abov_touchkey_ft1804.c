@@ -55,9 +55,11 @@
 #include <linux/vbus_notifier.h>
 #endif
 
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 #include <linux/notifier.h>
 #include <linux/fb.h>
+#endif
 #endif
 
 /* registers */
@@ -215,8 +217,10 @@ struct abov_tk_info {
 	int light_table_crc;
 	u8 light_reg;
 #endif
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	struct notifier_block fb_notif;
+#endif
 #endif
 };
 
@@ -3244,9 +3248,11 @@ static int abov_parse_dt(struct device *dev,
 }
 #endif
 
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *self,
 	unsigned long event, void *data);
+#endif
 #endif
 
 static int abov_tk_probe(struct i2c_client *client,
@@ -3515,10 +3521,12 @@ static int abov_tk_probe(struct i2c_client *client,
 	schedule_delayed_work(&info->efs_open_work, msecs_to_jiffies(2000));
 #endif
 
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	info->fb_notif.notifier_call = fb_notifier_callback;
 	if (fb_register_client(&info->fb_notif))
 		pr_err("%s: could not create fb notifier\n", __func__);
+#endif
 #endif
 
 	return 0;
@@ -3590,9 +3598,11 @@ static int abov_tk_remove(struct i2c_client *client)
 		free_irq(info->irq, info);
 	input_unregister_device(info->input_dev);
 	input_free_device(info->input_dev);
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	fb_unregister_client(&info->fb_notif);
 #endif	
+#endif
 	kfree(info);
 
 	return 0;
@@ -3769,6 +3779,7 @@ static void abov_tk_input_close(struct input_dev *dev)
 }
 #endif
 
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *self,
 				unsigned long event, void *data)
@@ -3796,6 +3807,7 @@ static int fb_notifier_callback(struct notifier_block *self,
 
 	return 0;
 }
+#endif
 #endif
 
 #if 0//defined(CONFIG_PM) && !defined(CONFIG_HAS_EARLYSUSPEND) &&!defined(CONFIG_INPUT_ENABLED)

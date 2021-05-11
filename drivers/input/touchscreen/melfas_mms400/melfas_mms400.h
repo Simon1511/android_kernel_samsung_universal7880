@@ -54,9 +54,11 @@
 #include <linux/input/input_booster.h>
 #endif
 
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 #include <linux/notifier.h>
 #include <linux/fb.h>
+#endif
 #endif
 
 #ifdef CONFIG_OF
@@ -262,8 +264,10 @@ struct mms_ts_info {
 	struct delayed_work switching_work;
 	struct notifier_block hall_ic_nb;
 #endif
+#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	struct notifier_block fb_notif;
+#endif
 #endif
 	bool flip_enable;
 	int cover_type;

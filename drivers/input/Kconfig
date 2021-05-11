@@ -242,6 +242,12 @@ config HALL_EVENT_REVERSE
 
 	  If unsure, say N.
 
+config FB_NOTIFIER
+	bool "Enable FB Notifier Callback"
+	default n
+	help
+	  This enables FB Notifier callback.
+
 comment "Input Device Drivers"
 
 source "drivers/input/keyboard/Kconfig"

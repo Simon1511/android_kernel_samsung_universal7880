@@ -2527,6 +2527,7 @@ CONFIG_MALI_PLATFORM_NAME="exynos"
 #
 # Frame buffer Devices
 #
+# CONFIG_FB_NOTIFIER is not set
 CONFIG_FB=y
 # CONFIG_FIRMWARE_EDID is not set
 CONFIG_FB_CMDLINE=y
