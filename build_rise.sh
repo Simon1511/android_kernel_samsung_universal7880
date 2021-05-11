@@ -1,5 +1,8 @@
 #!/bin/bash
 
+# Set to y to see full ouput of make
+debug=n
+
 BUILD_BOOT() {
     variant=$1
     dev=$2
@@ -36,7 +39,11 @@ BUILD_BOOT() {
 
     echo "Building..."
 
-    make -j64 > /dev/null 2>&1
+    if [[ "$debug" == "n" ]]; then
+        make -j64 > /dev/null 2>&1
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
 
     if [[ "$dev" == "a5" ]]; then
         rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
