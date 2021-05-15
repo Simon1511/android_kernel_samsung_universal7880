@@ -250,7 +250,7 @@ fi;
 if [ -f split_img/*-sigtype ]; then
   outname=unsigned-new.img;
 else
-  outname=a5.img;
+  outname=boot.img;
 fi;
 
 test "$dttype" == "ELF" && repackelf=1;
@@ -309,19 +309,19 @@ if [ -f split_img/*-sigtype ]; then
   test ! "$avbkey" && avbkey="$bin/avb/verity";
   echo " ";
   case $sigtype in
-    AVBv1) java -jar "$bin/BootSignature.jar" /$avbtype unsigned-new.img "$avbkey.pk8" "$avbkey.x509."* a5.img 2>/dev/null;;
+    AVBv1) java -jar "$bin/BootSignature.jar" /$avbtype unsigned-new.img "$avbkey.pk8" "$avbkey.x509."* boot.img 2>/dev/null;;
     BLOB)
-      awk 'BEGIN { printf "-SIGNED-BY-SIGNBLOB-\00\00\00\00\00\00\00\00" }' > a5.img;
+      awk 'BEGIN { printf "-SIGNED-BY-SIGNBLOB-\00\00\00\00\00\00\00\00" }' > boot.img;
       "$bin/$arch/blobpack" tempblob $blobtype unsigned-new.img >/dev/null;
-      cat tempblob >> a5.img;
+      cat tempblob >> boot.img;
       rm -rf tempblob;
     ;;
-    CHROMEOS) "$bin/$arch/futility" vbutil_kernel --pack a5.img --keyblock "$bin/chromeos/kernel.keyblock" --signprivate "$bin/chromeos/kernel_data_key.vbprivk" --version 1 --vmlinuz unsigned-new.img --bootloader "$bin/chromeos/empty" --config "$bin/chromeos/empty" --arch arm --flags 0x1;;
+    CHROMEOS) "$bin/$arch/futility" vbutil_kernel --pack boot.img --keyblock "$bin/chromeos/kernel.keyblock" --signprivate "$bin/chromeos/kernel_data_key.vbprivk" --version 1 --vmlinuz unsigned-new.img --bootloader "$bin/chromeos/empty" --config "$bin/chromeos/empty" --arch arm --flags 0x1;;
     DHTB)
-      "$bin/$arch/dhtbsign" -i unsigned-new.img -o a5.img >/dev/null;
+      "$bin/$arch/dhtbsign" -i unsigned-new.img -o boot.img >/dev/null;
       rm -rf split_img/*-tailtype 2>/dev/null;
     ;;
-    NOOK*) cat split_img/*-master_boot.key unsigned-new.img > a5.img;;
+    NOOK*) cat split_img/*-master_boot.key unsigned-new.img > boot.img;;
   esac;
   if [ ! $? -eq "0" ]; then
     abort;
@@ -335,9 +335,9 @@ if [ -f split_img/*-lokitype ]; then
   echo " ";
   echo "Using type: $lokitype";
   echo " ";
-  mv -f a5.img unlokied-new.img;
+  mv -f boot.img unlokied-new.img;
   if [ -f aboot.img ]; then
-    "$bin/$arch/loki_tool" patch $lokitype aboot.img unlokied-new.img a5.img >/dev/null;
+    "$bin/$arch/loki_tool" patch $lokitype aboot.img unlokied-new.img boot.img >/dev/null;
     if [ ! $? -eq "0" ]; then
       echo "Patching failed.";
       abort;
@@ -357,8 +357,8 @@ if [ -f split_img/*-tailtype ]; then
   echo "Using type: $tailtype";
   echo " ";
   case $tailtype in
-    Bump) awk 'BEGIN { printf "\x41\xA9\xE4\x67\x74\x4D\x1D\x1B\xA4\x29\xF2\xEC\xEA\x65\x52\x79" }' >> a5.img;;
-    SEAndroid) printf 'SEANDROIDENFORCE' >> a5.img;;
+    Bump) awk 'BEGIN { printf "\x41\xA9\xE4\x67\x74\x4D\x1D\x1B\xA4\x29\xF2\xEC\xEA\x65\x52\x79" }' >> boot.img;;
+    SEAndroid) printf 'SEANDROIDENFORCE' >> boot.img;;
   esac;
 fi;
 
