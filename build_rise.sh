@@ -74,15 +74,6 @@ BUILD_BOOT() {
         chmod +x $aikpath/Treble/repackimg.sh
         $aikpath/Treble/repackimg.sh
     fi
-
-    for i in `find rise/AIK/ -name "boot.img"`; do
-        if [ -e rise/output/boot_a5.img ]; then
-            rm rise/output/boot_a5.img
-        elif [ -e rise/output/boot_a7.img ]; then
-            rm rise/output/boot_a7.img
-        fi
-        mv $i rise/output/boot_$variant.img
-    done
 }
 
 clear
