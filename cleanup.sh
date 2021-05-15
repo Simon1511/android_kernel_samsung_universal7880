@@ -7,3 +7,10 @@ export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aar
 make clean
 make mrproper
 
+for i in `find rise/AIK/ -name "boot.img-zImage"`; do
+    rm $i
+done
+
+for i in `find rise/AIK/ -name "boot.img-dt"`; do
+    rm $i
+done
