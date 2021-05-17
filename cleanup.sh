@@ -14,3 +14,7 @@ done
 for i in `find rise/AIK/ -name "boot.img-dt"`; do
     rm $i
 done
+
+if [[ `which git` == *"git"* ]]; then
+    git checkout -- rise/AIK/*
+fi
