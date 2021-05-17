@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Set to y to see full ouput of make
+# Set to y to see output of make in terminal
 debug=n
 dtbpath=arch/arm64/boot/dtb.img
 imagepath=arch/arm64/boot/Image
@@ -14,30 +14,34 @@ BUILD_BOOT() {
     export SUBARCH=arm64
     export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
     export ANDROID_MAJOR_VERSION=p
+    
+    if [ -f rise/build.log ]; then
+        rm rise/build.log
+    fi
 
     if [[ "$variant" == "AOSP 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-            make lineage-a5y17lte_defconfig > /dev/null 2>&1
+            make lineage-a5y17lte_defconfig &> rise/build.log
         elif [[ "$dev" == "a7" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-            make lineage-a7y17lte_defconfig > /dev/null 2>&1
+            make lineage-a7y17lte_defconfig &> rise/build.log
         fi
     elif [[ "$variant" == "OneUI 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-            make oneui-a5y17lte_defconfig > /dev/null 2>&1
+            make oneui-a5y17lte_defconfig &> rise/build.log
         elif [[ "$dev" == "a7" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-            make oneui-a7y17lte_defconfig > /dev/null 2>&1
+            make oneui-a7y17lte_defconfig &> rise/build.log
         fi
     elif [[ "$variant" == "Treble 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-            make treble-a5y17lte_defconfig > /dev/null 2>&1
+            make treble-a5y17lte_defconfig &> rise/build.log
         elif [[ "$dev" == "a7" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-            make treble-a7y17lte_defconfig > /dev/null 2>&1
+            make treble-a7y17lte_defconfig &> rise/build.log
         fi
     fi
 
@@ -45,7 +49,7 @@ BUILD_BOOT() {
     echo "Building..."
 
     if [[ "$debug" == "n" ]]; then
-        make -j64 > /dev/null 2>&1
+        make -j64 &> rise/build.log
     elif [[ "$debug" == "y" ]]; then
         make -j64
     fi
