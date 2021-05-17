@@ -6,6 +6,10 @@ dtbpath=arch/arm64/boot/dtb.img
 imagepath=arch/arm64/boot/Image
 aikpath=rise/AIK
 
+# Colors
+RED='\033[0;31m'
+NC='\033[0m'
+
 BUILD_BOOT() {
     variant=$1
     dev=$2
@@ -52,6 +56,12 @@ BUILD_BOOT() {
         make -j64 &> rise/build.log
     elif [[ "$debug" == "y" ]]; then
         make -j64
+    fi
+    
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
     fi
 
     if [[ "$dev" == "a5" ]]; then
