@@ -142,9 +142,11 @@ clear
 echo "Build finished"
 
 read -p "Clean build directory? [Y/n] " clean
-if [[ "$clean" = "Y" ]]; then
+if [[ "$clean" = "Y" || "$clean" = "y" ]]; then
     ./cleanup.sh > /dev/null 2>&1
-elif [[ "$clean" = "n" ]]; then
+elif [[ "$clean" = "N" || "$clean" = "n" ]]; then
     exit
+else
+    printf "Wrong entry '$clean'. Did you mean 'Y'?\nIf so, run cleanup.sh manually\n"
 fi
 
