@@ -13,6 +13,9 @@ NC='\033[0m'
 BUILD_BOOT() {
     variant=$1
     dev=$2
+    
+    echo "variant=$variant" > rise/build.info
+    echo "device=$dev" >> rise/build.info
 
     export ARCH=arm64
     export SUBARCH=arm64

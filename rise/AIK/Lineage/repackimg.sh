@@ -363,5 +363,10 @@ if [ -f split_img/*-tailtype ]; then
 fi;
 
 echo "Done!";
+
+device=$(grep "device" ../../build.info | sed 's/device=//g')
+
+mv boot.img ../../boot_lineage_$device.img
+
 exit 0;
 
