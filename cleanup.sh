@@ -18,3 +18,10 @@ done
 if [[ `which git` == *"git"* ]]; then
     git checkout -- rise/AIK/*
 fi
+
+# Delete some other files
+rm rise/build.log
+rm rise/build.info
+rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
+rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
+rm arch/arm64/configs/tmp_defconfig
