@@ -117,7 +117,7 @@ BUILD_BOOT() {
     fi
 
     clear
-    printf "Output file is rise/boot_$dev.img\n"
+    printf "\nOutput file is rise/boot_$dev.img\n\n"
 }
 
 BUILD_ALL() {
@@ -162,11 +162,11 @@ BUILD_ALL() {
     chmod +x $aikpath/Lineage/repackimg.sh
     $aikpath/Lineage/repackimg.sh
 
+    ./cleanup.sh > /dev/null 2>&1
+
     if [[ "$debug" == "n" ]]; then
         clear
     fi
-
-    ./cleanup.sh > /dev/null 2>&1
 
     echo "Building..."
 
@@ -192,11 +192,11 @@ BUILD_ALL() {
     chmod +x $aikpath/OneUI/repackimg.sh
     $aikpath/OneUI/repackimg.sh
 
+    ./cleanup.sh > /dev/null 2>&1
+
     if [[ "$debug" == "n" ]]; then
         clear
     fi
-
-    ./cleanup.sh > /dev/null 2>&1
 
     echo "Building..."
 
@@ -223,11 +223,11 @@ BUILD_ALL() {
     chmod +x $aikpath/Treble/repackimg.sh
     $aikpath/Treble/repackimg.sh
 
+    ./cleanup.sh > /dev/null 2>&1
+
     if [[ "$debug" == "n" ]]; then
         clear
     fi
-
-    ./cleanup.sh > /dev/null 2>&1
 
     echo "Building..."
 
@@ -257,11 +257,11 @@ BUILD_ALL() {
     chmod +x $aikpath/Lineage/repackimg.sh
     $aikpath/Lineage/repackimg.sh
 
+    ./cleanup.sh > /dev/null 2>&1
+
     if [[ "$debug" == "n" ]]; then
         clear
     fi
-
-    ./cleanup.sh > /dev/null 2>&1
 
     echo "Building..."
 
@@ -287,11 +287,11 @@ BUILD_ALL() {
     chmod +x $aikpath/OneUI/repackimg.sh
     $aikpath/OneUI/repackimg.sh
 
+    ./cleanup.sh > /dev/null 2>&1
+
     if [[ "$debug" == "n" ]]; then
         clear
     fi
-
-    ./cleanup.sh > /dev/null 2>&1
 
     echo "Building..."
 
@@ -318,9 +318,9 @@ BUILD_ALL() {
     chmod +x $aikpath/Treble/repackimg.sh
     $aikpath/Treble/repackimg.sh
 
-    clear
-
     ./cleanup.sh > /dev/null 2>&1
+
+    clear
 
     rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
     rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
@@ -329,10 +329,10 @@ BUILD_ALL() {
 
     echo "Creating flashable zip..."
 
-    ./rise/zip/zip.sh $riseVer $buildDate > /dev/null 2>&1
+    ./rise/zip/zip.sh $riseVer $buildDate
 
     clear
-    printf "Output zip is rise/zip/riseKernel-10.0-$riseVer-$buildDate-a5y17lte.zip\n"
+    printf "\nOutput zip is rise/zip/riseKernel-10.0-$riseVer-$buildDate-a5y17lte.zip\n\n"
 }
 
 clear
