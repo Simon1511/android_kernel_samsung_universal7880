@@ -19,6 +19,7 @@ done
 
 if [[ `which git` == *"git"* ]]; then
     git checkout -- rise/AIK/*
+    git checkout -- arch/arm64/configs/rise-*
 fi
 
 # Delete some other files

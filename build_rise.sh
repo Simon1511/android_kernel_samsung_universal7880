@@ -14,6 +14,10 @@ riseVer=v1.X
 RED='\033[0;31m'
 NC='\033[0m'
 
+SET_LOCALVERSION() {
+    sed -i 's|CONFIG_LOCALVERSION=""|CONFIG_LOCALVERSION="-riseKernel-10.0-'$riseVer'"|g' arch/arm64/configs/rise-$1y17lte_defconfig
+}
+
 BUILD_BOOT() {
     variant=$1
     dev=$2
@@ -38,6 +42,8 @@ BUILD_BOOT() {
     echo "full=n" >> rise/build.info
     echo "variant=$variant" > rise/build.info
     echo "device=$dev" >> rise/build.info
+
+    SET_LOCALVERSION $dev
 
     if [[ "$variant" == "AOSP 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
@@ -140,10 +146,13 @@ BUILD_ALL() {
     echo "device=a5" > rise/build.info
     echo "full=y" >> rise/build.info
 
+    SET_LOCALVERSION a5
+
     # A5 Lineage Q
     cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
     cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
+
     make tmp_defconfig &> rise/build.log
 
     if [[ "$debug" == "n" ]]; then
@@ -171,9 +180,12 @@ BUILD_ALL() {
 
     echo "Building..."
 
+    SET_LOCALVERSION a5
+
     # A5 OneUI Q
     cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
+
     make tmp_defconfig &> rise/build.log
 
     if [[ "$debug" == "n" ]]; then
@@ -201,10 +213,13 @@ BUILD_ALL() {
 
     echo "Building..."
 
+    SET_LOCALVERSION a5
+
     # A5 Treble Q
     cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
     cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
+
     make tmp_defconfig &> rise/build.log
 
     if [[ "$debug" == "n" ]]; then
@@ -235,10 +250,13 @@ BUILD_ALL() {
     echo "device=a7" > rise/build.info
     echo "full=y" >> rise/build.info
 
+    SET_LOCALVERSION a7
+
     # A7 Lineage Q
     cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
+
     make tmp_defconfig &> rise/build.log
 
     if [[ "$debug" == "n" ]]; then
@@ -266,9 +284,12 @@ BUILD_ALL() {
 
     echo "Building..."
 
+    SET_LOCALVERSION a7
+
     # A7 OneUI Q
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
+
     make tmp_defconfig &> rise/build.log
 
     if [[ "$debug" == "n" ]]; then
@@ -296,10 +317,13 @@ BUILD_ALL() {
 
     echo "Building..."
 
+    SET_LOCALVERSION a7
+
     # A7 Treble Q
     cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
+
     make tmp_defconfig &> rise/build.log
 
     if [[ "$debug" == "n" ]]; then
