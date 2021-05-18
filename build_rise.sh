@@ -6,6 +6,8 @@ dtbpath=arch/arm64/boot/dtb.img
 imagepath=arch/arm64/boot/Image
 aikpath=rise/AIK
 
+riseVer=v1.X
+
 # Colors
 RED='\033[0;31m'
 NC='\033[0m'
@@ -26,7 +28,8 @@ BUILD_BOOT() {
     if [ -f rise/build.info ]; then
         rm rise/build.info
     fi
-    
+
+    echo "full=n" >> rise/build.info
     echo "variant=$variant" > rise/build.info
     echo "device=$dev" >> rise/build.info
 
@@ -112,10 +115,144 @@ BUILD_BOOT() {
     fi
 }
 
+BUILD_ALL() {
+    export ARCH=arm64
+    export SUBARCH=arm64
+    export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
+    export ANDROID_MAJOR_VERSION=p
+    
+    if [ -f rise/build.log ]; then
+        rm rise/build.log
+    fi
+    
+    if [ -f rise/build.info ]; then
+        rm rise/build.info
+    fi
+
+    echo "Building..."
+
+    echo "device=a5" > rise/build.info
+    echo "full=y" >> rise/build.info
+
+    # A5 Lineage Q
+    cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
+    cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
+    cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
+    make tmp_defconfig &> rise/build.log
+    make -j64 &> rise/build.log
+
+    cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
+    chmod +x $aikpath/Lineage/repackimg.sh
+    $aikpath/Lineage/repackimg.sh
+
+    clear
+
+    ./cleanup.sh > /dev/null 2>&1
+
+    echo "Building..."
+
+    # A5 OneUI Q
+    cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
+    cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
+    make tmp_defconfig &> rise/build.log
+    make -j64 &> rise/build.log
+
+    cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
+    chmod +x $aikpath/OneUI/repackimg.sh
+    $aikpath/OneUI/repackimg.sh
+
+    clear
+
+    ./cleanup.sh > /dev/null 2>&1
+
+    echo "Building..."
+
+    # A5 Treble Q
+    cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
+    cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
+    cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
+    make tmp_defconfig &> rise/build.log
+    make -j64 &> rise/build.log
+
+    cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
+    chmod +x $aikpath/Treble/repackimg.sh
+    $aikpath/Treble/repackimg.sh
+
+    clear
+
+    ./cleanup.sh > /dev/null 2>&1
+
+    echo "Building..."
+
+    echo "device=a7" > rise/build.info
+    echo "full=y" >> rise/build.info
+
+    # A7 Lineage Q
+    cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
+    cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
+    cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
+    make tmp_defconfig &> rise/build.log
+    make -j64 &> rise/build.log
+
+    cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
+    chmod +x $aikpath/Lineage/repackimg.sh
+    $aikpath/Lineage/repackimg.sh
+
+    clear
+
+    ./cleanup.sh > /dev/null 2>&1
+
+    echo "Building..."
+
+    # A7 OneUI Q
+    cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
+    cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
+    make tmp_defconfig &> rise/build.log
+    make -j64 &> rise/build.log
+
+    cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
+    chmod +x $aikpath/OneUI/repackimg.sh
+    $aikpath/OneUI/repackimg.sh
+
+    clear
+
+    ./cleanup.sh > /dev/null 2>&1
+
+    echo "Building..."
+
+    # A7 Treble Q
+    cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
+    cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
+    cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
+    make tmp_defconfig &> rise/build.log
+    make -j64 &> rise/build.log
+
+    cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
+    chmod +x $aikpath/Treble/repackimg.sh
+    $aikpath/Treble/repackimg.sh
+
+    clear
+
+    ./cleanup.sh > /dev/null 2>&1
+
+    rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
+    rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
+    
+    rm arch/arm64/configs/tmp_defconfig
+
+    ./rise/zip/zip.sh $riseVer
+}
+
 clear
 echo "Select build variant:"
 
-select opt in "AOSP 10.0" "Treble 10.0" "OneUI 10.0"
+select opt in "AOSP 10.0" "Treble 10.0" "OneUI 10.0" "All"
 do
 
     clear
@@ -153,6 +290,10 @@ do
 	else
 	    echo "Unknown device: $device"
 	fi
+	break ;;
+
+    "All")
+        BUILD_ALL
 	break
     esac
 done

@@ -1,6 +1,8 @@
 
 #!/bin/bash
 
+full=$(grep "full" rise/build.info | sed 's/full=//g')
+
 export ARCH=arm64
 export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
 
@@ -20,8 +22,10 @@ if [[ `which git` == *"git"* ]]; then
 fi
 
 # Delete some other files
-rm rise/build.log
-rm rise/build.info
-rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-rm arch/arm64/configs/tmp_defconfig
+if [[ "$full" == "n" ]]; then
+    rm rise/build.log
+    rm rise/build.info
+    rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
+    rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
+    rm arch/arm64/configs/tmp_defconfig
+fi

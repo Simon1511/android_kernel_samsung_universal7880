@@ -365,8 +365,13 @@ fi;
 echo "Done!";
 
 device=$(grep "device" ../../build.info | sed 's/device=//g')
+full=$(grep "full" ../../build.info | sed 's/full=//g')
 
-mv boot.img ../../boot_oneui_$device.img
+if [[ "$full" == "y" ]]; then
+    mv boot.img ../../zip/rise/$device/rise-q.img
+elif [[ "$full" == "n" ]]; then
+    mv boot.img ../../boot_oneui_$device.img
+fi
 
 exit 0;
 
