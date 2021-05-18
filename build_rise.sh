@@ -6,6 +6,8 @@ dtbpath=arch/arm64/boot/dtb.img
 imagepath=arch/arm64/boot/Image
 aikpath=rise/AIK
 
+buildDate=$(date '+%Y%m%d')
+
 riseVer=v1.X
 
 # Colors
@@ -113,6 +115,9 @@ BUILD_BOOT() {
         chmod +x $aikpath/Treble/repackimg.sh
         $aikpath/Treble/repackimg.sh
     fi
+
+    clear
+    printf "Output file is rise/boot_$dev.img\n"
 }
 
 BUILD_ALL() {
@@ -322,7 +327,12 @@ BUILD_ALL() {
     
     rm arch/arm64/configs/tmp_defconfig
 
-    ./rise/zip/zip.sh $riseVer
+    echo "Creating flashable zip..."
+
+    ./rise/zip/zip.sh $riseVer $buildDate > /dev/null 2>&1
+
+    clear
+    printf "Output zip is rise/zip/riseKernel-10.0-$riseVer-$buildDate-a5y17lte.zip\n"
 }
 
 clear
@@ -374,7 +384,6 @@ do
     esac
 done
 
-clear
 echo "Build finished"
 
 read -p "Clean build directory? [Y/n] " clean

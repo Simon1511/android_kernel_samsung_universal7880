@@ -1,5 +1,5 @@
 riseVer=$1
-buildDate=$(date '+%Y%m%d')
+buildDate=$2
 
 rm *.zip
 
