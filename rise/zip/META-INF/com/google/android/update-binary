@@ -1,0 +1,130 @@
+#!/sbin/sh
+# Shell Script EDIFY Replacement: Recovery Flashable Zip
+# Methods created by osm0sis @ xda-developers
+# Script created by Simon1511@XDA
+
+OUTFD=/proc/self/fd/$2;
+ZIPFILE="$3";
+DIR=$(dirname "$ZIPFILE");
+bootloader=$(getprop ro.boot.bootloader)
+
+if [ -z `getprop ro.boot.bootloader | grep -E "A520|A720"` ]; then
+    ui_print "This device is not supported"
+    ui_print "Aborting..."
+    exit
+fi
+
+# ui_print "<string>"
+ui_print() {
+  while [ "$1" ]; do
+    echo -e "ui_print $1
+      ui_print" >> $OUTFD;
+    shift;
+  done;
+}
+
+set_progress() {
+  echo "set_progress $1" >> $OUTFD;
+}
+
+# contains <string> <substring>
+contains() {
+  test "${1#*$2}" != "$1";
+}
+
+# unzip
+cd /tmp
+unzip -o "$ZIPFILE"
+
+ui_print " "
+ui_print "#############################"
+ui_print "  riseKernel for A5/A7 2017"
+ui_print " "
+ui_print "           v1.X            "
+ui_print " "
+ui_print "      by Simon1511@XDA     "
+ui_print "#############################"
+ui_print " "
+
+set_progress "0.25"
+
+ui_print "- Mounting partitions"
+
+# Unmount partitions
+umount /system
+umount /system_root
+umount /data
+umount /efs
+
+# Mount System
+mount /dev/block/platform/13540000.dwmmc0/by-name/SYSTEM /system
+
+set_progress "0.50"
+
+# AOSP Q and Treble
+if ls /system/system/build.prop; then
+    # AOSP Q
+    if [ `cat /system/system/build.prop | grep "ro.treble.enabled"` = "ro.treble.enabled=false" ]; then
+        cd /tmp
+        
+        ui_print "- AOSP 10.0 ROM detected"
+        
+        set_progress "0.75"
+        
+        ui_print "- Installing kernel..."
+        
+        sleep 3
+        
+        if contains "$bootloader" "A520"; then
+            dd if=rise/a5/aosp-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        elif contains "$bootloader" "A720"; then
+            dd if=rise/a7/aosp-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        fi
+    # OneUI / Rise-Q
+    elif contains "`cat /system/system/build.prop`" "Rise-Q"; then
+        cd /tmp
+        
+        ui_print "- Rise-Q detected"
+        
+        set_progress "0.75"
+        
+        ui_print "- Installing kernel..."
+        
+        sleep 3
+        
+        if contains "$bootloader" "A520"; then
+            dd if=rise/a5/rise-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        elif contains "$bootloader" "A720"; then
+            dd if=rise/a7/rise-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        fi
+    # Treble
+    elif [ `cat /system/system/build.prop | grep "ro.treble.enabled"` = "ro.treble.enabled=true" ]; then
+        cd /tmp
+        
+        ui_print "- Treble 10.0 detected"
+        
+        set_progress "0.75"
+        
+        ui_print "- Installing kernel..."
+        
+        sleep 3
+        
+        if contains "$bootloader" "A520"; then
+            dd if=rise/a5/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        elif contains "$bootloader" "A720"; then
+            dd if=rise/a7/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        fi
+    fi
+fi
+
+ui_print "- Unmounting partitions"
+umount /system
+umount /system_root
+
+# Cleanup
+rm -rf /tmp/META-INF
+rm -rf /tmp/rise
+
+ui_print "- Kernel has been successfully installed"
+set_progress "1.00"
+ui_print " "
