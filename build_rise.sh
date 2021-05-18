@@ -139,14 +139,27 @@ BUILD_ALL() {
     cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
     make tmp_defconfig &> rise/build.log
-    make -j64 &> rise/build.log
+
+    if [[ "$debug" == "n" ]]; then
+        make -j64 &> rise/build.log
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
+
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
+    fi
 
     cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
     cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
     chmod +x $aikpath/Lineage/repackimg.sh
     $aikpath/Lineage/repackimg.sh
 
-    clear
+    if [[ "$debug" == "n" ]]; then
+        clear
+    fi
 
     ./cleanup.sh > /dev/null 2>&1
 
@@ -156,14 +169,27 @@ BUILD_ALL() {
     cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
     make tmp_defconfig &> rise/build.log
-    make -j64 &> rise/build.log
+
+    if [[ "$debug" == "n" ]]; then
+        make -j64 &> rise/build.log
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
+
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
+    fi
 
     cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
     cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
     chmod +x $aikpath/OneUI/repackimg.sh
     $aikpath/OneUI/repackimg.sh
 
-    clear
+    if [[ "$debug" == "n" ]]; then
+        clear
+    fi
 
     ./cleanup.sh > /dev/null 2>&1
 
@@ -174,14 +200,27 @@ BUILD_ALL() {
     cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
     make tmp_defconfig &> rise/build.log
-    make -j64 &> rise/build.log
+
+    if [[ "$debug" == "n" ]]; then
+        make -j64 &> rise/build.log
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
+
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
+    fi
 
     cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
     cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
     chmod +x $aikpath/Treble/repackimg.sh
     $aikpath/Treble/repackimg.sh
 
-    clear
+    if [[ "$debug" == "n" ]]; then
+        clear
+    fi
 
     ./cleanup.sh > /dev/null 2>&1
 
@@ -195,14 +234,27 @@ BUILD_ALL() {
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
     make tmp_defconfig &> rise/build.log
-    make -j64 &> rise/build.log
+
+    if [[ "$debug" == "n" ]]; then
+        make -j64 &> rise/build.log
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
+
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
+    fi
 
     cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
     cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
     chmod +x $aikpath/Lineage/repackimg.sh
     $aikpath/Lineage/repackimg.sh
 
-    clear
+    if [[ "$debug" == "n" ]]; then
+        clear
+    fi
 
     ./cleanup.sh > /dev/null 2>&1
 
@@ -212,14 +264,27 @@ BUILD_ALL() {
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
     make tmp_defconfig &> rise/build.log
-    make -j64 &> rise/build.log
+
+    if [[ "$debug" == "n" ]]; then
+        make -j64 &> rise/build.log
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
+
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
+    fi
 
     cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
     cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
     chmod +x $aikpath/OneUI/repackimg.sh
     $aikpath/OneUI/repackimg.sh
 
-    clear
+    if [[ "$debug" == "n" ]]; then
+        clear
+    fi
 
     ./cleanup.sh > /dev/null 2>&1
 
@@ -230,7 +295,18 @@ BUILD_ALL() {
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
     cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
     make tmp_defconfig &> rise/build.log
-    make -j64 &> rise/build.log
+
+    if [[ "$debug" == "n" ]]; then
+        make -j64 &> rise/build.log
+    elif [[ "$debug" == "y" ]]; then
+        make -j64
+    fi
+
+    if [ ! -f arch/arm64/boot/Image ]; then
+        clear
+        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
+        exit
+    fi
 
     cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
     cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
