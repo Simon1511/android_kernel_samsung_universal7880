@@ -31,6 +31,10 @@ BUILD_BOOT() {
         rm rise/build.info
     fi
 
+    if [ -f arch/arm64/configs/tmp_defconfig ]; then
+        rm arch/arm64/configs/tmp_defconfig
+    fi
+
     echo "full=n" >> rise/build.info
     echo "variant=$variant" > rise/build.info
     echo "device=$dev" >> rise/build.info
@@ -125,6 +129,10 @@ BUILD_ALL() {
     
     if [ -f rise/build.info ]; then
         rm rise/build.info
+    fi
+
+    if [ -f arch/arm64/configs/tmp_defconfig ]; then
+        rm arch/arm64/configs/tmp_defconfig
     fi
 
     echo "Building..."
