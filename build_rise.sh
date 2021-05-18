@@ -39,39 +39,32 @@ BUILD_BOOT() {
         if [[ "$dev" == "a5" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
             cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-            cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
-            make tmp_defconfig &> rise/build.log
         elif [[ "$dev" == "a7" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
             cat arch/arm64/configs/rise-a7y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-            cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
-            make tmp_defconfig &> rise/build.log
         fi
+        cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
     elif [[ "$variant" == "OneUI 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
             cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-            cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
-            make tmp_defconfig &> rise/build.log
         elif [[ "$dev" == "a7" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
             cat arch/arm64/configs/rise-a7y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-            cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
-            make tmp_defconfig &> rise/build.log
         fi
+        cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
     elif [[ "$variant" == "Treble 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
             cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-            cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
-            make tmp_defconfig &> rise/build.log
         elif [[ "$dev" == "a7" ]]; then
             cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
             cat arch/arm64/configs/rise-a7y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-            cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
-            make tmp_defconfig &> rise/build.log
         fi
+        cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
     fi
+
+    make tmp_defconfig &> rise/build.log
 
     clear
     echo "Target: $variant for $dev"
