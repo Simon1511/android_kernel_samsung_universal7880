@@ -1,6 +1,10 @@
 riseVer=$1
 buildDate=$2
 
+if [[ ! `echo $PWD` == *"rise/zip"* ]]; then
+    cd rise/zip
+fi
+
 rm *.zip
 
 cat META-INF/com/google/android/update-binary > update-binary.bak
