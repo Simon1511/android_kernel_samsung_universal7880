@@ -369,7 +369,7 @@ full=$(grep "full" ../../build.info | sed 's/full=//g')
 
 if [[ "$full" == "y" ]]; then
     mv boot.img ../../zip/rise/$device/aosp-q.img
-elif [[ "$full" == "n" ]]; then
+else
     mv boot.img ../../boot_lineage_$device.img
 fi
 

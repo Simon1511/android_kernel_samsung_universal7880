@@ -120,7 +120,13 @@ BUILD_BOOT() {
     fi
 
     clear
-    printf "\nOutput file is rise/boot_$dev.img\n\n"
+    if [[ "$variant" == "AOSP 10.0" ]]; then
+        printf "\nOutput file is rise/boot_lineage_$dev.img\n\n"
+    elif [[ "$variant" == "OneUI 10.0" ]]; then
+        printf "\nOutput file is rise/boot_oneui_$dev.img\n\n"
+    elif [[ "$variant" == "Treble 10.0" ]]; then
+        printf "\nOutput file is rise/boot_treble_$dev.img\n\n"
+    fi
 }
 
 BUILD_ALL() {
