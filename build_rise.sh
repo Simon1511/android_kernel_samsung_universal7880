@@ -8,7 +8,7 @@ aikpath=rise/AIK
 
 buildDate=$(date '+%Y%m%d')
 
-riseVer=v1.X
+riseVer=v1.5
 
 # Colors
 RED='\033[0;31m'
