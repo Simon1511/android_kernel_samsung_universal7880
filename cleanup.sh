@@ -23,7 +23,7 @@ if [[ `which git` == *"git"* ]]; then
 fi
 
 # Delete some other files
-if [[ "$full" == "n" ]]; then
+if [[ ! "$full" == "y" ]]; then
     rm rise/build.log
     rm rise/build.info
     rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
