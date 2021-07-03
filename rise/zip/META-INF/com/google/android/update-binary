@@ -115,6 +115,14 @@ if ls /system/system/build.prop; then
             dd if=rise/a7/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         fi
     fi
+elif ls /system/build.prop; then
+    ui_print "You are running a ROM with an android version older than 10.0"
+    ui_print "Aborting..."
+    exit
+else
+    ui_print "Error detecting android version"
+    ui_print "Aborting..."
+    exit
 fi
 
 ui_print "- Unmounting partitions"
