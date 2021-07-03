@@ -367,9 +367,9 @@ BUILD_ALL() {
 }
 
 clear
-echo "Select build variant:"
+echo "Select build variant: [1-4] "
 
-select opt in "AOSP 10.0" "Treble 10.0" "OneUI 10.0" "All"
+select opt in "AOSP 10.0" "Treble 10.0" "OneUI 10.0" "Installation zip"
 do
 
     clear
@@ -409,7 +409,7 @@ do
 	fi
 	break ;;
 
-    "All")
+    "Installation zip")
         BUILD_ALL
 	break
     esac
