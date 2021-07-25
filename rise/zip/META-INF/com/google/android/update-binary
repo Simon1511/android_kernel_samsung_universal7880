@@ -8,7 +8,7 @@ ZIPFILE="$3";
 DIR=$(dirname "$ZIPFILE");
 bootloader=$(getprop ro.boot.bootloader)
 
-if [ -z `getprop ro.boot.bootloader | grep -E "A520|A720"` ]; then
+if [ -z "`getprop ro.boot.bootloader | grep -E "A520|A720"`" ]; then
     ui_print "This device is not supported"
     ui_print "Aborting..."
     exit
@@ -56,32 +56,24 @@ umount /system_root
 umount /data
 umount /efs
 
-# Mount System
+# Mount System and vendor if existent
 mount /dev/block/platform/13540000.dwmmc0/by-name/SYSTEM /system
+
+if ls /dev/block/platform/13540000.dwmmc0/by-name/VENDOR; then
+    if [ ! -d /vendor ]; then
+        mkdir /vendor
+    fi
+
+    mount /dev/block/platform/13540000.dwmmc0/by-name/VENDOR /vendor
+fi
 
 set_progress "0.50"
 
-# AOSP Q and Treble
+# Actual ROM detection
 if ls /system/system/build.prop; then
-    # AOSP Q
-    if [ `cat /system/system/build.prop | grep "ro.treble.enabled"` = "ro.treble.enabled=false" ]; then
-        cd /tmp
-        
-        ui_print "- AOSP 10.0 ROM detected"
-        
-        set_progress "0.75"
-        
-        ui_print "- Installing kernel..."
-        
-        sleep 3
-        
-        if contains "$bootloader" "A520"; then
-            dd if=rise/a5/aosp-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
-        elif contains "$bootloader" "A720"; then
-            dd if=rise/a7/aosp-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
-        fi
-    # OneUI / Rise-Q
-    elif contains "`cat /system/system/build.prop`" "Rise-Q"; then
+
+    # OneUI 2 / Rise-Q
+    if contains "`cat /system/system/build.prop`" "Rise-Q"; then
         cd /tmp
         
         ui_print "- Rise-Q detected"
@@ -97,11 +89,46 @@ if ls /system/system/build.prop; then
         elif contains "$bootloader" "A720"; then
             dd if=rise/a7/rise-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         fi
-    # Treble
-    elif [ `cat /system/system/build.prop | grep "ro.treble.enabled"` = "ro.treble.enabled=true" ]; then
+
+    # Treble Q and R
+    elif ls /vendor/build.prop; then
+        if ! contains "`cat /system/system/build.prop`" "ro.treble.enabled=true"; then
+            exit
+        fi
+
+        cd /tmp
+
+        set_progress "0.75"
+
+        if contains "`cat /vendor/build.prop`" "ro.risetreble.version"; then
+            ui_print "- riseTreble-R detected"
+        else
+            ui_print "- riseTreble-Q detected"
+        fi
+
+        ui_print "- Installing kernel..."
+
+        sleep 3
+
+        if contains "`cat /vendor/build.prop`" "ro.risetreble.version"; then
+            if contains "$bootloader" "A520"; then
+                dd if=rise/a5/treble-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+            elif contains "$bootloader" "A720"; then
+                dd if=rise/a7/treble-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+            fi
+        else
+            if contains "$bootloader" "A520"; then
+                dd if=rise/a5/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+            elif contains "$bootloader" "A720"; then
+                dd if=rise/a7/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+            fi
+        fi
+
+    # AOSP Q
+    elif contains "`cat /system/system/build.prop`" "ro.system.build.version.release=10"; then
         cd /tmp
         
-        ui_print "- Treble 10.0 detected"
+        ui_print "- AOSP 10.0 ROM detected"
         
         set_progress "0.75"
         
@@ -110,9 +137,27 @@ if ls /system/system/build.prop; then
         sleep 3
         
         if contains "$bootloader" "A520"; then
-            dd if=rise/a5/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+            dd if=rise/a5/aosp-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         elif contains "$bootloader" "A720"; then
-            dd if=rise/a7/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+            dd if=rise/a7/aosp-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        fi
+
+    # AOSP R
+    elif contains "`cat /system/system/build.prop`" "ro.system.build.version.release=11"; then
+        cd /tmp
+        
+        ui_print "- AOSP 11.0 ROM detected"
+        
+        set_progress "0.75"
+        
+        ui_print "- Installing kernel..."
+        
+        sleep 3
+        
+        if contains "$bootloader" "A520"; then
+            dd if=rise/a5/aosp-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        elif contains "$bootloader" "A720"; then
+            dd if=rise/a7/aosp-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         fi
     fi
 elif ls /system/build.prop; then
