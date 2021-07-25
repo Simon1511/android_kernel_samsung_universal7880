@@ -15,7 +15,7 @@ RED='\033[0;31m'
 NC='\033[0m'
 
 SET_LOCALVERSION() {
-    sed -i 's|CONFIG_LOCALVERSION=""|CONFIG_LOCALVERSION="-riseKernel-10.0-'$riseVer'"|g' arch/arm64/configs/rise-$1y17lte_defconfig
+    sed -i 's|CONFIG_LOCALVERSION=""|CONFIG_LOCALVERSION="-riseKernel-'$1'.0-'$riseVer'"|g' arch/arm64/configs/rise-$2y17lte_defconfig
 }
 
 BUILD_BOOT() {
@@ -43,7 +43,7 @@ BUILD_BOOT() {
     echo "variant=$variant" > rise/build.info
     echo "device=$dev" >> rise/build.info
 
-    SET_LOCALVERSION $dev
+    SET_LOCALVERSION 10 $dev
 
     if [[ "$variant" == "AOSP 10.0" ]]; then
         if [[ "$dev" == "a5" ]]; then
@@ -152,7 +152,7 @@ BUILD_ALL() {
     echo "device=a5" > rise/build.info
     echo "full=y" >> rise/build.info
 
-    SET_LOCALVERSION a5
+    SET_LOCALVERSION 10 a5
 
     # A5 Lineage Q
     cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
@@ -186,7 +186,7 @@ BUILD_ALL() {
 
     echo "Building..."
 
-    SET_LOCALVERSION a5
+    SET_LOCALVERSION 10 a5
 
     # A5 OneUI Q
     cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
@@ -219,7 +219,7 @@ BUILD_ALL() {
 
     echo "Building..."
 
-    SET_LOCALVERSION a5
+    SET_LOCALVERSION 10 a5
 
     # A5 Treble Q
     cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
@@ -256,7 +256,7 @@ BUILD_ALL() {
     echo "device=a7" > rise/build.info
     echo "full=y" >> rise/build.info
 
-    SET_LOCALVERSION a7
+    SET_LOCALVERSION 10 a7
 
     # A7 Lineage Q
     cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
@@ -290,7 +290,7 @@ BUILD_ALL() {
 
     echo "Building..."
 
-    SET_LOCALVERSION a7
+    SET_LOCALVERSION 10 a7
 
     # A7 OneUI Q
     cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
@@ -323,7 +323,7 @@ BUILD_ALL() {
 
     echo "Building..."
 
-    SET_LOCALVERSION a7
+    SET_LOCALVERSION 10 a7
 
     # A7 Treble Q
     cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
