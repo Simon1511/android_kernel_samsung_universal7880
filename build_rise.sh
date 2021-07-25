@@ -50,23 +50,35 @@ BUILD_BOOT() {
     echo "variant=$variant" >> rise/build.info
     echo "device=$dev" >> rise/build.info
 
-    SET_LOCALVERSION 10 $dev
+    # Set android version shown in localversion
+    if echo "$variant" | grep -q "10"; then
+       androidVer="10"
+    elif echo "$variant" | grep -q "11"; then
+       androidVer="11"
+    fi
 
-    if [[ "$variant" == "AOSP 10.0" ]] || [[ "$variant" == "OneUI 10.0" ]]; then
+    SET_LOCALVERSION $androidVer $dev
+
+    if [[ "$variant" == "AOSP "$androidVer".0" ]] || [[ "$variant" == "OneUI "$androidVer".0" ]]; then
         cat arch/arm64/boot/dts/exynos7880-"$dev"y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-"$dev"y17lte_common.dtsi
         cat arch/arm64/configs/rise-"$dev"y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
 
-        if [[ "$variant" == "AOSP 10.0" ]]; then
+        if [[ "$variant" == "AOSP "$androidVer".0" ]]; then
             cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
-        elif [[ "$variant" == "OneUI 10.0" ]]; then
+        elif [[ "$variant" == "OneUI "$androidVer".0" ]]; then
             cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
         fi
 
-    elif [[ "$variant" == "Treble 10.0" ]]; then
+    elif [[ "$variant" == "Treble "$androidVer".0" ]]; then
         cat arch/arm64/boot/dts/exynos7880-"$dev"y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-"$dev"y17lte_common.dtsi
         cat arch/arm64/configs/rise-"$dev"y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
 
         cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
+    fi
+
+    # Force permissive for AOSP 11.0 since SePolicy is not written (yet?)
+    if [[ "$variant" == "AOSP 11.0" ]]; then
+        sed -i 's|# CONFIG_FORCE_PERMISSIVE is not set|CONFIG_FORCE_PERMISSIVE=y|g' arch/arm64/configs/tmp_defconfig
     fi
 
     make tmp_defconfig &> rise/build.log
@@ -94,12 +106,12 @@ BUILD_BOOT() {
 
     echo "Packing boot.img..."
 
-    if [[ "$variant" == "AOSP 10.0" ]]; then
-        secVar="Lineage"
-    elif [[ "$variant" == "OneUI 10.0" ]]; then
-        secVar="OneUI"
-    elif [[ "$variant" == "Treble 10.0" ]]; then
-        secVar="Treble"
+    if [[ "$variant" == "AOSP "$androidVer".0" ]]; then
+        secVar="Lineage_"$androidVer".0"
+    elif [[ "$variant" == "OneUI "$androidVer".0" ]]; then
+        secVar="OneUI_"$androidVer".0"
+    elif [[ "$variant" == "Treble "$androidVer".0" ]]; then
+        secVar="Treble_"$androidVer".0"
     fi
 
     cp $imagepath $aikpath/$secVar/split_img/boot.img-zImage
@@ -129,6 +141,12 @@ BUILD_ALL() {
 
     echo "Building..."
 
+    BUILD_BOOT "AOSP 11.0" "a5" "y"
+    ./cleanup.sh > /dev/null 2>&1
+
+    BUILD_BOOT "AOSP 11.0" "a7" "y"
+    ./cleanup.sh > /dev/null 2>&1
+
     BUILD_BOOT "AOSP 10.0" "a5" "y"
     ./cleanup.sh > /dev/null 2>&1
 
@@ -139,6 +157,12 @@ BUILD_ALL() {
     ./cleanup.sh > /dev/null 2>&1
 
     BUILD_BOOT "OneUI 10.0" "a7" "y"
+    ./cleanup.sh > /dev/null 2>&1
+
+    BUILD_BOOT "Treble 11.0" "a5" "y"
+    ./cleanup.sh > /dev/null 2>&1
+
+    BUILD_BOOT "Treble 11.0" "a7" "y"
     ./cleanup.sh > /dev/null 2>&1
 
     BUILD_BOOT "Treble 10.0" "a5" "y"
@@ -158,21 +182,43 @@ BUILD_ALL() {
 }
 
 clear
-echo "Select build variant: [1-4] "
+echo "Select build variant: [1-6] "
 
-select opt in "AOSP 10.0" "Treble 10.0" "OneUI 10.0" "Installation zip"
+select opt in "AOSP 11.0" "AOSP 10.0" "Treble 11.0" "Treble 10.0" "OneUI 10.0" "Installation zip"
 do
 
     clear
     echo "Selected: $opt"
 
     case $opt in
+    "AOSP 11.0")
+	read -p "Enter device: [A5/A7] " device
+	if [[ "$device" == "A5" || "$device" == "a5" ]]; then
+	    BUILD_BOOT "AOSP 11.0" "a5"
+	elif [[ "$device" == "A7" || "$device" == "a7" ]]; then
+	    BUILD_BOOT "AOSP 11.0" "a7"
+	else
+	    echo "Unknown device: $device"
+	fi
+	break ;;
+
     "AOSP 10.0")
 	read -p "Enter device: [A5/A7] " device
 	if [[ "$device" == "A5" || "$device" == "a5" ]]; then
 	    BUILD_BOOT "AOSP 10.0" "a5"
 	elif [[ "$device" == "A7" || "$device" == "a7" ]]; then
 	    BUILD_BOOT "AOSP 10.0" "a7"
+	else
+	    echo "Unknown device: $device"
+	fi
+	break ;;
+
+    "Treble 11.0")
+	read -p "Enter device: [A5/A7] " device
+	if [[ "$device" == "A5" || "$device" == "a5" ]]; then
+	    BUILD_BOOT "Treble 11.0" "a5"
+	elif [[ "$device" == "A7" || "$device" == "a7" ]]; then
+	    BUILD_BOOT "Treble 11.0" "a7"
 	else
 	    echo "Unknown device: $device"
 	fi
