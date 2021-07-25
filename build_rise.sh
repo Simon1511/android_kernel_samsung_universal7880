@@ -10,6 +10,12 @@ buildDate=$(date '+%Y%m%d')
 
 riseVer=v1.5
 
+# Set ARCH, toolchain path and android version
+export ARCH=arm64
+export SUBARCH=arm64
+export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
+export ANDROID_MAJOR_VERSION=p
+
 # Colors
 RED='\033[0;31m'
 NC='\033[0m'
@@ -21,11 +27,7 @@ SET_LOCALVERSION() {
 BUILD_BOOT() {
     variant=$1
     dev=$2
-
-    export ARCH=arm64
-    export SUBARCH=arm64
-    export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
-    export ANDROID_MAJOR_VERSION=p
+    full=$3
     
     if [ -f rise/build.log ]; then
         rm rise/build.log
@@ -39,38 +41,31 @@ BUILD_BOOT() {
         rm arch/arm64/configs/tmp_defconfig
     fi
 
-    echo "full=n" >> rise/build.info
-    echo "variant=$variant" > rise/build.info
+    if [[ "$full" == "y" ]]; then
+        echo "full=y" > rise/build.info
+    else
+        echo "full=n" > rise/build.info
+    fi
+
+    echo "variant=$variant" >> rise/build.info
     echo "device=$dev" >> rise/build.info
 
     SET_LOCALVERSION 10 $dev
 
-    if [[ "$variant" == "AOSP 10.0" ]]; then
-        if [[ "$dev" == "a5" ]]; then
-            cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-            cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-        elif [[ "$dev" == "a7" ]]; then
-            cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-            cat arch/arm64/configs/rise-a7y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
+    if [[ "$variant" == "AOSP 10.0" ]] || [[ "$variant" == "OneUI 10.0" ]]; then
+        cat arch/arm64/boot/dts/exynos7880-"$dev"y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-"$dev"y17lte_common.dtsi
+        cat arch/arm64/configs/rise-"$dev"y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
+
+        if [[ "$variant" == "AOSP 10.0" ]]; then
+            cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
+        elif [[ "$variant" == "OneUI 10.0" ]]; then
+            cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
         fi
-        cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
-    elif [[ "$variant" == "OneUI 10.0" ]]; then
-        if [[ "$dev" == "a5" ]]; then
-            cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-            cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-        elif [[ "$dev" == "a7" ]]; then
-            cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-            cat arch/arm64/configs/rise-a7y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-        fi
-        cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
+
     elif [[ "$variant" == "Treble 10.0" ]]; then
-        if [[ "$dev" == "a5" ]]; then
-            cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-            cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-        elif [[ "$dev" == "a7" ]]; then
-            cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-            cat arch/arm64/configs/rise-a7y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-        fi
+        cat arch/arm64/boot/dts/exynos7880-"$dev"y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-"$dev"y17lte_common.dtsi
+        cat arch/arm64/configs/rise-"$dev"y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
+
         cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
     fi
 
@@ -85,56 +80,41 @@ BUILD_BOOT() {
     elif [[ "$debug" == "y" ]]; then
         make -j64
     fi
-    
+
+    # Show error when the build failed
     if [ ! -f arch/arm64/boot/Image ]; then
         clear
         printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
         exit
     fi
 
-    if [[ "$dev" == "a5" ]]; then
-        rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-    elif [[ "$dev" == "a7" ]]; then
-        rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-    fi
+    rm arch/arm64/boot/dts/exynos7880-"$dev"y17lte_common.dtsi
     
     rm arch/arm64/configs/tmp_defconfig
 
     echo "Packing boot.img..."
 
     if [[ "$variant" == "AOSP 10.0" ]]; then
-        cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
-        cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
-        chmod +x $aikpath/Lineage/repackimg.sh
-        $aikpath/Lineage/repackimg.sh
+        secVar="Lineage"
     elif [[ "$variant" == "OneUI 10.0" ]]; then
-        cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
-        cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
-        chmod +x $aikpath/OneUI/repackimg.sh
-        $aikpath/OneUI/repackimg.sh
+        secVar="OneUI"
     elif [[ "$variant" == "Treble 10.0" ]]; then
-        cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
-        cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
-        chmod +x $aikpath/Treble/repackimg.sh
-        $aikpath/Treble/repackimg.sh
+        secVar="Treble"
     fi
 
+    cp $imagepath $aikpath/$secVar/split_img/boot.img-zImage
+    cp $dtbpath $aikpath/$secVar/split_img/boot.img-dt
+    chmod +x $aikpath/$secVar/repackimg.sh
+    $aikpath/$secVar/repackimg.sh
+
     clear
-    if [[ "$variant" == "AOSP 10.0" ]]; then
-        printf "\nOutput file is rise/boot_lineage_$dev.img\n\n"
-    elif [[ "$variant" == "OneUI 10.0" ]]; then
-        printf "\nOutput file is rise/boot_oneui_$dev.img\n\n"
-    elif [[ "$variant" == "Treble 10.0" ]]; then
-        printf "\nOutput file is rise/boot_treble_$dev.img\n\n"
-    fi
+
+    secVar=$(echo "$secVar" | tr '[:upper:]' '[:lower:]')
+
+    printf "\nOutput file is rise/boot_"$secVar"_"$dev".img\n\n"
 }
 
 BUILD_ALL() {
-    export ARCH=arm64
-    export SUBARCH=arm64
-    export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
-    export ANDROID_MAJOR_VERSION=p
-    
     if [ -f rise/build.log ]; then
         rm rise/build.log
     fi
@@ -149,221 +129,32 @@ BUILD_ALL() {
 
     echo "Building..."
 
-    echo "device=a5" > rise/build.info
-    echo "full=y" >> rise/build.info
-
-    SET_LOCALVERSION 10 a5
-
-    # A5 Lineage Q
-    cat arch/arm64/boot/dts/exynos7880-a5y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-    cat arch/arm64/configs/rise-a5y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
-    cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
-
-    make tmp_defconfig &> rise/build.log
-
-    if [[ "$debug" == "n" ]]; then
-        make -j64 &> rise/build.log
-    elif [[ "$debug" == "y" ]]; then
-        make -j64
-    fi
-
-    if [ ! -f arch/arm64/boot/Image ]; then
-        clear
-        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
-        exit
-    fi
-
-    cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
-    cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
-    chmod +x $aikpath/Lineage/repackimg.sh
-    $aikpath/Lineage/repackimg.sh
-
+    BUILD_BOOT "AOSP 10.0" "a5" "y"
     ./cleanup.sh > /dev/null 2>&1
 
-    if [[ "$debug" == "n" ]]; then
-        clear
-    fi
-
-    echo "Building..."
-
-    SET_LOCALVERSION 10 a5
-
-    # A5 OneUI Q
-    cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
-    cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
-
-    make tmp_defconfig &> rise/build.log
-
-    if [[ "$debug" == "n" ]]; then
-        make -j64 &> rise/build.log
-    elif [[ "$debug" == "y" ]]; then
-        make -j64
-    fi
-
-    if [ ! -f arch/arm64/boot/Image ]; then
-        clear
-        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
-        exit
-    fi
-
-    cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
-    cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
-    chmod +x $aikpath/OneUI/repackimg.sh
-    $aikpath/OneUI/repackimg.sh
-
+    BUILD_BOOT "AOSP 10.0" "a7" "y"
     ./cleanup.sh > /dev/null 2>&1
 
-    if [[ "$debug" == "n" ]]; then
-        clear
-    fi
-
-    echo "Building..."
-
-    SET_LOCALVERSION 10 a5
-
-    # A5 Treble Q
-    cat arch/arm64/boot/dts/exynos7880-a5y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-    cat arch/arm64/configs/rise-a5y17lte_defconfig > arch/arm64/configs/tmp_defconfig
-    cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
-
-    make tmp_defconfig &> rise/build.log
-
-    if [[ "$debug" == "n" ]]; then
-        make -j64 &> rise/build.log
-    elif [[ "$debug" == "y" ]]; then
-        make -j64
-    fi
-
-    if [ ! -f arch/arm64/boot/Image ]; then
-        clear
-        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
-        exit
-    fi
-
-    cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
-    cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
-    chmod +x $aikpath/Treble/repackimg.sh
-    $aikpath/Treble/repackimg.sh
-
+    BUILD_BOOT "OneUI 10.0" "a5" "y"
     ./cleanup.sh > /dev/null 2>&1
 
-    if [[ "$debug" == "n" ]]; then
-        clear
-    fi
-
-    echo "Building..."
-
-    echo "device=a7" > rise/build.info
-    echo "full=y" >> rise/build.info
-
-    SET_LOCALVERSION 10 a7
-
-    # A7 Lineage Q
-    cat arch/arm64/boot/dts/exynos7880-a7y17lte_lineage_oneui.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-    cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
-    cat arch/arm64/configs/lineage_defconfig >> arch/arm64/configs/tmp_defconfig
-
-    make tmp_defconfig &> rise/build.log
-
-    if [[ "$debug" == "n" ]]; then
-        make -j64 &> rise/build.log
-    elif [[ "$debug" == "y" ]]; then
-        make -j64
-    fi
-
-    if [ ! -f arch/arm64/boot/Image ]; then
-        clear
-        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
-        exit
-    fi
-
-    cp $imagepath $aikpath/Lineage/split_img/boot.img-zImage
-    cp $dtbpath $aikpath/Lineage/split_img/boot.img-dt
-    chmod +x $aikpath/Lineage/repackimg.sh
-    $aikpath/Lineage/repackimg.sh
-
+    BUILD_BOOT "OneUI 10.0" "a7" "y"
     ./cleanup.sh > /dev/null 2>&1
 
-    if [[ "$debug" == "n" ]]; then
-        clear
-    fi
-
-    echo "Building..."
-
-    SET_LOCALVERSION 10 a7
-
-    # A7 OneUI Q
-    cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
-    cat arch/arm64/configs/oneui_defconfig >> arch/arm64/configs/tmp_defconfig
-
-    make tmp_defconfig &> rise/build.log
-
-    if [[ "$debug" == "n" ]]; then
-        make -j64 &> rise/build.log
-    elif [[ "$debug" == "y" ]]; then
-        make -j64
-    fi
-
-    if [ ! -f arch/arm64/boot/Image ]; then
-        clear
-        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
-        exit
-    fi
-
-    cp $imagepath $aikpath/OneUI/split_img/boot.img-zImage
-    cp $dtbpath $aikpath/OneUI/split_img/boot.img-dt
-    chmod +x $aikpath/OneUI/repackimg.sh
-    $aikpath/OneUI/repackimg.sh
-
+    BUILD_BOOT "Treble 10.0" "a5" "y"
     ./cleanup.sh > /dev/null 2>&1
 
-    if [[ "$debug" == "n" ]]; then
-        clear
-    fi
-
-    echo "Building..."
-
-    SET_LOCALVERSION 10 a7
-
-    # A7 Treble Q
-    cat arch/arm64/boot/dts/exynos7880-a7y17lte_treble.dtsi > arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-    cat arch/arm64/configs/rise-a7y17lte_defconfig > arch/arm64/configs/tmp_defconfig
-    cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
-
-    make tmp_defconfig &> rise/build.log
-
-    if [[ "$debug" == "n" ]]; then
-        make -j64 &> rise/build.log
-    elif [[ "$debug" == "y" ]]; then
-        make -j64
-    fi
-
-    if [ ! -f arch/arm64/boot/Image ]; then
-        clear
-        printf "${RED}ERROR${NC} encountered during build!\nSee rise/build.log for more information\n"
-        exit
-    fi
-
-    cp $imagepath $aikpath/Treble/split_img/boot.img-zImage
-    cp $dtbpath $aikpath/Treble/split_img/boot.img-dt
-    chmod +x $aikpath/Treble/repackimg.sh
-    $aikpath/Treble/repackimg.sh
-
+    BUILD_BOOT "Treble 10.0" "a7" "y"
     ./cleanup.sh > /dev/null 2>&1
 
     clear
-
-    rm arch/arm64/boot/dts/exynos7880-a5y17lte_common.dtsi
-    rm arch/arm64/boot/dts/exynos7880-a7y17lte_common.dtsi
-    
-    rm arch/arm64/configs/tmp_defconfig
 
     echo "Creating flashable zip..."
 
     ./rise/zip/zip.sh $riseVer $buildDate
 
     clear
-    printf "\nOutput zip is rise/zip/riseKernel-10.0-$riseVer-$buildDate-a5y17lte.zip\n\n"
+    printf "\nOutput zip is rise/zip/riseKernel-$riseVer-$buildDate-a5y17lte.zip\n\n"
 }
 
 clear
