@@ -164,9 +164,6 @@ BUILD_ALL() {
     clear
 
     ./rise/zip/zip.sh $riseVer $buildDate
-
-    clear
-    printf "\nOutput zip is rise/zip/riseKernel-$riseVer-$buildDate-a5y17lte.zip\n\n"
 }
 
 clear

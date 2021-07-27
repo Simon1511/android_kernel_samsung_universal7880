@@ -28,3 +28,6 @@ fi
 
 cat update-binary.bak > META-INF/com/google/android/update-binary
 rm update-binary.bak
+
+clear
+printf "\nOutput zip is rise/zip/riseKernel-$riseVer-$buildDate-a5y17lte.zip\n\n"
