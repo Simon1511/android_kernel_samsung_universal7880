@@ -67,6 +67,17 @@ if ls /dev/block/platform/13540000.dwmmc0/by-name/VENDOR; then
     mount /dev/block/platform/13540000.dwmmc0/by-name/VENDOR /vendor
 fi
 
+# Rise-Q runs Jan 2021 firmware, therefore exclude it here
+if ! contains "`cat /system/system/build.prop`" "Rise-Q"; then
+    if [ "`grep "ro.system.build.date.utc" /system/system/build.prop | sed 's/ro.system.build.date.utc=//g'`" -lt "1617062400" ]; then
+        ui_print " "
+        ui_print "You are running a ROM that is too old. Consider updating to a more recent one."
+        ui_print "Aborting..."
+        ui_print " "
+        exit
+fi
+fi
+
 set_progress "0.50"
 
 # Actual ROM detection
