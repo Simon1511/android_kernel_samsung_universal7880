@@ -10,6 +10,8 @@ buildDate=$(date '+%Y%m%d')
 
 riseVer=v1.5
 
+deviceArray=(a5 a7)
+
 # Set ARCH, toolchain path and android version
 export ARCH=arm64
 export SUBARCH=arm64
@@ -141,39 +143,25 @@ BUILD_ALL() {
 
     echo "Building..."
 
-    BUILD_BOOT "AOSP 11.0" "a5" "y"
-    ./cleanup.sh > /dev/null 2>&1
+    for i in ${deviceArray[@]}; do
+        BUILD_BOOT "AOSP 11.0" "$i" "y"
+        ./cleanup.sh > /dev/null 2>&1
 
-    BUILD_BOOT "AOSP 11.0" "a7" "y"
-    ./cleanup.sh > /dev/null 2>&1
+        BUILD_BOOT "AOSP 10.0" "$i" "y"
+        ./cleanup.sh > /dev/null 2>&1
 
-    BUILD_BOOT "AOSP 10.0" "a5" "y"
-    ./cleanup.sh > /dev/null 2>&1
+        BUILD_BOOT "OneUI 10.0" "$i" "y"
+        ./cleanup.sh > /dev/null 2>&1
 
-    BUILD_BOOT "AOSP 10.0" "a7" "y"
-    ./cleanup.sh > /dev/null 2>&1
+        BUILD_BOOT "Treble 11.0" "$i" "y"
+        ./cleanup.sh > /dev/null 2>&1
 
-    BUILD_BOOT "OneUI 10.0" "a5" "y"
-    ./cleanup.sh > /dev/null 2>&1
+        BUILD_BOOT "Treble 10.0" "$i" "y"
+        ./cleanup.sh > /dev/null 2>&1
 
-    BUILD_BOOT "OneUI 10.0" "a7" "y"
-    ./cleanup.sh > /dev/null 2>&1
-
-    BUILD_BOOT "Treble 11.0" "a5" "y"
-    ./cleanup.sh > /dev/null 2>&1
-
-    BUILD_BOOT "Treble 11.0" "a7" "y"
-    ./cleanup.sh > /dev/null 2>&1
-
-    BUILD_BOOT "Treble 10.0" "a5" "y"
-    ./cleanup.sh > /dev/null 2>&1
-
-    BUILD_BOOT "Treble 10.0" "a7" "y"
-    ./cleanup.sh > /dev/null 2>&1
+    done
 
     clear
-
-    echo "Creating flashable zip..."
 
     ./rise/zip/zip.sh $riseVer $buildDate
 
