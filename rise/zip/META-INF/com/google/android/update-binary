@@ -67,8 +67,9 @@ if ls /dev/block/platform/13540000.dwmmc0/by-name/VENDOR; then
     mount /dev/block/platform/13540000.dwmmc0/by-name/VENDOR /vendor
 fi
 
-# Rise-Q runs Jan 2021 firmware, therefore exclude it here
-if ! contains "`cat /system/system/build.prop`" "Rise-Q"; then
+# Check if the user runs AOSP
+# "ro.treble.enabled=false" excludes both Rise-Q and any GSI since both have this prop set to "true"
+if contains "`cat /system/system/build.prop`" "ro.treble.enabled=false"; then
     if [ "`grep "ro.system.build.date.utc" /system/system/build.prop | sed 's/ro.system.build.date.utc=//g'`" -lt "1617062400" ]; then
         ui_print " "
         ui_print "You are running a ROM that is too old. Consider updating to a more recent one."
