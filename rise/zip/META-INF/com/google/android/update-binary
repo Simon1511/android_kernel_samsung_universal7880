@@ -105,6 +105,8 @@ if ls /system/system/build.prop; then
     # Treble Q and R
     elif ls /vendor/build.prop; then
         if ! contains "`cat /system/system/build.prop`" "ro.treble.enabled=true"; then
+            ui_print " "
+            ui_print "It looks like you are running a non-treble ROM but there are files in your /vendor partition. Consider wiping /vendor and trying again."
             exit
         fi
 
