@@ -53,11 +53,9 @@
 #endif
 
 #define CONFIG_INPUT_ENABLED
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 #include <linux/notifier.h>
 #include <linux/fb.h>
-#endif
 #endif
 
 #define SEC_FACTORY_TEST
@@ -766,10 +764,8 @@ struct bt532_ts_info {
 #ifdef CONFIG_VBUS_NOTIFIER
 	struct notifier_block vbus_nb;
 #endif
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	struct notifier_block fb_notif;
-#endif
 #endif
 	u8 cover_type;
 	bool	flip_enable;
@@ -2330,11 +2326,9 @@ fw_request_fail:
 	return ret;
 }
 
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *self,
 	unsigned long event, void *data);
-#endif
 #endif
 
 static bool init_touch(struct bt532_ts_info *info)
@@ -2395,12 +2389,10 @@ static bool init_touch(struct bt532_ts_info *info)
 	input_info(true, &info->client->dev, "%s: tsp_test=%x pat_function=%d afe_base=%04X cal_count=%X tune_fix_ver=%04X\n",
 					__func__, info->test_result.data[0], info->pdata->pat_function, info->pdata->afe_base,
 					info->cap_info.cal_count, info->cap_info.tune_fix_ver);
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	info->fb_notif.notifier_call = fb_notifier_callback;
 	if (fb_register_client(&info->fb_notif))
 		pr_err("%s: could not create fb notifier\n", __func__);
-#endif
 #endif
 	return true;
 fail_init:
@@ -3225,7 +3217,6 @@ static int bt532_ts_suspend(struct device *dev)
 }
 #endif
 
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *self,
 				unsigned long event, void *data)
@@ -3253,7 +3244,6 @@ static int fb_notifier_callback(struct notifier_block *self,
 
 	return 0;
 }
-#endif
 #endif
 
 #if defined(SEC_FACTORY_TEST) || defined(USE_MISC_DEVICE)
@@ -7929,10 +7919,8 @@ static int bt532_ts_remove(struct i2c_client *client)
 #ifdef USE_MISC_DEVICE
 	misc_deregister(&touch_misc_device);
 #endif
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	fb_unregister_client(&info->fb_notif);
-#endif
 #endif
 #ifdef CONFIG_HAS_EARLYSUSPEND
 	unregister_early_suspend(&info->early_suspend);

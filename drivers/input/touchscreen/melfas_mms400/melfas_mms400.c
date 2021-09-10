@@ -1162,11 +1162,9 @@ static int mms_init_config(struct mms_ts_info *info)
 	return 0;
 }
 
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *self,
 	unsigned long event, void *data);
-#endif
 #endif
 
 /**
@@ -1374,12 +1372,10 @@ static int mms_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	INIT_DELAYED_WORK(&info->ghost_check, mms_ghost_touch_check);
 	p_ghost_check = &info->ghost_check;
 #endif
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	info->fb_notif.notifier_call = fb_notifier_callback;
 	if (fb_register_client(&info->fb_notif))
 		pr_err("%s: could not create fb notifier\n", __func__);
-#endif
 #endif
 	device_init_wakeup(&client->dev, true);
 	info->init = false;
@@ -1462,10 +1458,8 @@ static int mms_remove(struct i2c_client *client)
 	class_destroy(info->class);
 #endif
 
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 	fb_unregister_client(&info->fb_notif);
-#endif
 #endif
 
 	input_unregister_device(info->input_dev);
@@ -1505,7 +1499,6 @@ static int mms_resume(struct device *dev)
 	return 0;
 }
 
-#ifdef CONFIG_FB_NOTIFIER
 #ifdef CONFIG_FB
 static int fb_notifier_callback(struct notifier_block *self,
 				unsigned long event, void *data)
@@ -1533,7 +1526,6 @@ static int fb_notifier_callback(struct notifier_block *self,
 
 	return 0;
 }
-#endif
 #endif
 
 static const struct dev_pm_ops mms_dev_pm_ops = {
