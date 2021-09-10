@@ -78,11 +78,6 @@ BUILD_BOOT() {
         cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
     fi
 
-    # Force permissive for AOSP 11.0 since SePolicy is not written (yet?)
-    if [[ "$variant" == "AOSP 11.0" ]]; then
-        sed -i 's|# CONFIG_FORCE_PERMISSIVE is not set|CONFIG_FORCE_PERMISSIVE=y|g' arch/arm64/configs/tmp_defconfig
-    fi
-
     make tmp_defconfig &> rise/build.log
 
     clear
