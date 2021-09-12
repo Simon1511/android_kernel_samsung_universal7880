@@ -13,6 +13,8 @@ fi
 
 rm *.zip
 
+sed -i 's|#PLACEHOLDER|ui_print "           '$riseVer'            "|g' META-INF/com/google/android/update-binary
+
 # Use 7z if available
 if [[ `which 7z` == *"7z"* ]]; then
     printf "\nCreating flashable zip using ${RED}7z${NC}..."
@@ -24,3 +26,5 @@ fi
 
 clear
 printf "\nOutput zip is rise/zip/riseKernel-$riseVer-$buildDate-a5y17lte.zip\n\n"
+
+sed -i 's|ui_print "           '$riseVer'            "|#PLACEHOLDER|g' META-INF/com/google/android/update-binary
