@@ -8,7 +8,7 @@ aikpath=rise/AIK
 
 buildDate=$(date '+%Y%m%d')
 
-riseVer=v1.7
+riseVer=v1.8
 
 deviceArray=(a5 a7)
 
