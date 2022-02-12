@@ -7,6 +7,7 @@ OUTFD=/proc/self/fd/$2;
 ZIPFILE="$3";
 DIR=$(dirname "$ZIPFILE");
 bootloader=$(getprop ro.boot.bootloader)
+supported="12"
 
 if [ -z "`getprop ro.boot.bootloader | grep -E "A520|A720"`" ]; then
     ui_print "This device is not supported"
@@ -83,6 +84,15 @@ set_progress "0.50"
 
 # Actual ROM detection
 if ls /system/system/build.prop; then
+
+    if [ "`grep "ro.system.build.version.release=" /system/system/build.prop | sed 's/ro.system.build.version.release=//g'`" -gt "$supported" ]; then
+        ui_print " "
+        ui_print "Unsupported ROM detected!"
+        ui_print "Supported: Android $supported, but Android $(grep "ro.system.build.version.release=" /system/system/build.prop | sed 's/ro.system.build.version.release=//g') is installed"
+        ui_print "Aborting..."
+        ui_print " "
+        exit
+    fi
 
     # OneUI 2 / Rise-Q
     if contains "`cat /system/system/build.prop`" "Rise-Q"; then
