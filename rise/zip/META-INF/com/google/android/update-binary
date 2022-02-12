@@ -76,7 +76,7 @@ if contains "`cat /system/system/build.prop`" "ro.treble.enabled=false"; then
         ui_print "Aborting..."
         ui_print " "
         exit
-fi
+    fi
 fi
 
 set_progress "0.50"
@@ -172,6 +172,24 @@ if ls /system/system/build.prop; then
             dd if=rise/a5/aosp-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         elif contains "$bootloader" "A720"; then
             dd if=rise/a7/aosp-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        fi
+
+    # AOSP S
+    elif contains "`cat /system/system/build.prop`" "ro.system.build.version.release=12"; then
+        cd /tmp
+        
+        ui_print "- AOSP 12.0 ROM detected"
+        
+        set_progress "0.75"
+        
+        ui_print "- Installing kernel..."
+        
+        sleep 3
+        
+        if contains "$bootloader" "A520"; then
+            dd if=rise/a5/aosp-s.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        elif contains "$bootloader" "A720"; then
+            dd if=rise/a7/aosp-s.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         fi
     fi
 elif ls /system/build.prop; then

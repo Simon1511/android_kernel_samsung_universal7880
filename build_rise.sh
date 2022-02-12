@@ -57,6 +57,8 @@ BUILD_BOOT() {
        androidVer="10"
     elif echo "$variant" | grep -q "11"; then
        androidVer="11"
+    elif echo "$variant" | grep -q "12"; then
+       androidVer="12"
     fi
 
     SET_LOCALVERSION $androidVer $dev
@@ -76,6 +78,16 @@ BUILD_BOOT() {
         cat arch/arm64/configs/rise-"$dev"y17lte_defconfig >> arch/arm64/configs/tmp_defconfig
 
         cat arch/arm64/configs/treble_defconfig >> arch/arm64/configs/tmp_defconfig
+    fi
+
+    if [[ "$variant" == "AOSP 12.0" ]]; then
+
+        # Force permissive for AOSP 12.0 since SePolicy is not written (yet?)
+        sed -i 's|# CONFIG_FORCE_PERMISSIVE is not set|CONFIG_FORCE_PERMISSIVE=y|g' arch/arm64/configs/tmp_defconfig
+
+        # Disable CONFIG_RT_GROUP_SCHED
+        # Yet to figure out if this is actually needed
+        sed -i 's|CONFIG_RT_GROUP_SCHED=y|# CONFIG_RT_GROUP_SCHED is not set|g' arch/arm64/configs/tmp_defconfig
     fi
 
     make tmp_defconfig &> rise/build.log
@@ -139,6 +151,9 @@ BUILD_ALL() {
     echo "Building..."
 
     for i in ${deviceArray[@]}; do
+        BUILD_BOOT "AOSP 12.0" "$i" "y"
+        ./cleanup.sh > /dev/null 2>&1
+
         BUILD_BOOT "AOSP 11.0" "$i" "y"
         ./cleanup.sh > /dev/null 2>&1
 
@@ -162,15 +177,26 @@ BUILD_ALL() {
 }
 
 clear
-echo "Select build variant: [1-6] "
+echo "Select build variant: [1-7] "
 
-select opt in "AOSP 11.0" "AOSP 10.0" "Treble 11.0" "Treble 10.0" "OneUI 10.0" "Installation zip"
+select opt in "AOSP 12.0" "AOSP 11.0" "AOSP 10.0" "Treble 11.0" "Treble 10.0" "OneUI 10.0" "Installation zip"
 do
 
     clear
     echo "Selected: $opt"
 
     case $opt in
+    "AOSP 12.0")
+	read -p "Enter device: [A5/A7] " device
+	if [[ "$device" == "A5" || "$device" == "a5" ]]; then
+	    BUILD_BOOT "AOSP 12.0" "a5"
+	elif [[ "$device" == "A7" || "$device" == "a7" ]]; then
+	    BUILD_BOOT "AOSP 12.0" "a7"
+	else
+	    echo "Unknown device: $device"
+	fi
+	break ;;
+
     "AOSP 11.0")
 	read -p "Enter device: [A5/A7] " device
 	if [[ "$device" == "A5" || "$device" == "a5" ]]; then
