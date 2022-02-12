@@ -15,12 +15,33 @@ deviceArray=(a5 a7)
 # Set ARCH, toolchain path and android version
 export ARCH=arm64
 export SUBARCH=arm64
-export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
 export ANDROID_MAJOR_VERSION=p
 
 # Colors
 RED='\033[0;31m'
 NC='\033[0m'
+
+if [ ! -d rise/toolchain/ ] || [ ! -f rise/toolchain/lib/gcc/aarch64-linux-android/4.9.x/*.a ]; then
+    read -p "Toolchain not found! Download now? [Y/n] " tc
+
+    rm -rf rise/toolchain/
+
+    if [[ "$tc" == "Y" || "$tc" == "y" ]]; then
+        if [[ `which git` == *"git"* ]]; then
+            git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 -b lineage-19.0 rise/toolchain
+            export CROSS_COMPILE=$PWD/rise/toolchain/bin/aarch64-linux-android-
+        else
+            echo "git is not installed, can't download toolchain!"
+            exit
+        fi
+    elif [[ "$tc" == "N" || "$tc" == "n" ]]; then
+        echo "WARN: Builds will fail without a toolchain!"
+        export CROSS_COMPILE=/media/simon/Linux_data/android-build-tools/ubertc4/bin/aarch64-linux-android-
+    else
+        echo "Wrong input: $tc"
+        exit
+    fi
+fi
 
 SET_LOCALVERSION() {
     sed -i 's|CONFIG_LOCALVERSION=""|CONFIG_LOCALVERSION="-riseKernel-'$1'.0-'$riseVer'"|g' arch/arm64/configs/rise-$2y17lte_defconfig
