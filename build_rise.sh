@@ -21,15 +21,15 @@ export ANDROID_MAJOR_VERSION=p
 RED='\033[0;31m'
 NC='\033[0m'
 
-if [ ! -d rise/toolchain/ ] || [ ! -f rise/toolchain/lib/gcc/aarch64-linux-android/4.9.x/*.a ]; then
+if [ ! -d ../toolchain/ ]; then
     read -p "Toolchain not found! Download now? [Y/n] " tc
 
-    rm -rf rise/toolchain/
+    rm -rf ../toolchain/
 
     if [[ "$tc" == "Y" || "$tc" == "y" ]]; then
         if [[ `which git` == *"git"* ]]; then
-            git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 -b lineage-19.0 rise/toolchain
-            export CROSS_COMPILE=$PWD/rise/toolchain/bin/aarch64-linux-android-
+            git clone https://github.com/LineageOS/android_prebuilts_gcc_linux-x86_aarch64_aarch64-linux-android-4.9 -b lineage-19.0 ../toolchain
+            export CROSS_COMPILE=$PWD/../toolchain/bin/aarch64-linux-android-
         else
             echo "git is not installed, can't download toolchain!"
             exit
@@ -41,6 +41,8 @@ if [ ! -d rise/toolchain/ ] || [ ! -f rise/toolchain/lib/gcc/aarch64-linux-andro
         echo "Wrong input: $tc"
         exit
     fi
+else
+    export CROSS_COMPILE=$PWD/../toolchain/bin/aarch64-linux-android-
 fi
 
 SET_LOCALVERSION() {
