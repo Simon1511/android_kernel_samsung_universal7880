@@ -188,7 +188,7 @@ if ls /system/system/build.prop; then
     elif contains "`cat /system/system/build.prop`" "ro.system.build.version.release=12"; then
         cd /tmp
         
-        ui_print "- AOSP 12.0 ROM detected"
+        ui_print "- AOSP 12.0/12.1 ROM detected"
         
         set_progress "0.75"
         
