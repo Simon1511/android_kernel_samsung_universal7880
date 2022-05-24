@@ -1,21 +1,16 @@
 config DTC
 	bool
 
-menuconfig OF
-	bool "Device Tree and Open Firmware support"
-	help
-	  This option enables the device tree infrastructure.
-	  It is automatically selected by platforms that need it or can
-	  be enabled manually for unittests, overlays or
-	  compile-coverage.
+config OF
+	bool
 
-if OF
+menu "Device Tree and Open Firmware support"
+	depends on OF
 
 config OF_SELFTEST
 	bool "Device Tree Runtime self tests"
-	depends on OF_IRQ
+	depends on OF_IRQ && OF_EARLY_FLATTREE
 	select OF_DYNAMIC
-	select OF_EARLY_FLATTREE
 	select OF_RESOLVE
 	help
 	  This option builds in test cases for the device tree infrastructure
@@ -43,7 +38,7 @@ config OF_DYNAMIC
 
 config OF_ADDRESS
 	def_bool y
-	depends on !SPARC && HAS_IOMEM
+	depends on !SPARC
 	select OF_ADDRESS_PCI if PCI
 
 config OF_ADDRESS_PCI
@@ -88,6 +83,8 @@ config OF_RESERVED_MEM
 config OF_RESOLVE
 	bool
 
+endmenu # OF
+
 menuconfig EXYNOS_DTBTOOL
 	bool "Build dtbtool for Exynos"
 	select DTC
@@ -126,11 +123,3 @@ config EXYNOS_DTBH_PAGE_SIZE
 	  Must be divisible by 2048.
 
 endif
-
-config OF_OVERLAY
-	bool "Device Tree overlays"
-	depends on OF
-	select OF_DYNAMIC
-	select OF_DEVICE
-	select OF_RESOLVE
-endif # OF
