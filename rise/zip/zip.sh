@@ -18,10 +18,10 @@ sed -i 's|#PLACEHOLDER|ui_print "           '$riseVer'            "|g' META-INF/
 # Use 7z if available
 if [[ `which 7z` == *"7z"* ]]; then
     printf "\nCreating flashable zip using ${RED}7z${NC}..."
-    7z a -mmt16 -x'!rise/*/PLACEHOLDER' -tzip riseKernel-$riseVer-$buildDate-a57y17lte.zip META-INF/ rise/*/*.img
+    7z a -mmt16 -x'!rise/*/PLACEHOLDER' -tzip riseKernel-$riseVer-$buildDate-a57y17lte.zip META-INF/ rise/
 else
     printf "\nCreating flashable zip using ${RED}zip${NC}..."
-    zip -r9 riseKernel-$riseVer-$buildDate-a57y17lte.zip META-INF/ rise/*/*.img
+    zip -r9 riseKernel-$riseVer-$buildDate-a57y17lte.zip META-INF/ rise/
 fi
 
 clear

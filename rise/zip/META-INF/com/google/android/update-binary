@@ -212,6 +212,12 @@ else
     exit
 fi
 
+if [ -d /system/system/addon.d/ ]; then
+    ui_print "- Adding survival script for OTA's..."
+    cp rise/addon.d/98-risekernel.sh  /system/system/addon.d/
+    chmod +x /system/system/addon.d/98-risekernel.sh
+fi
+
 ui_print "- Unmounting partitions"
 umount /system
 umount /system_root
