@@ -7,7 +7,7 @@ OUTFD=/proc/self/fd/$2;
 ZIPFILE="$3";
 DIR=$(dirname "$ZIPFILE");
 bootloader=$(getprop ro.boot.bootloader)
-supported="12"
+supported="13"
 
 if [ -z "`getprop ro.boot.bootloader | grep -E "A520|A720"`" ]; then
     ui_print "This device is not supported"
@@ -200,6 +200,24 @@ if ls /system/system/build.prop; then
             dd if=rise/a5/aosp-s.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         elif contains "$bootloader" "A720"; then
             dd if=rise/a7/aosp-s.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        fi
+
+    # AOSP T
+    elif contains "`cat /system/system/build.prop`" "ro.system.build.version.release=13"; then
+        cd /tmp
+        
+        ui_print "- AOSP 13.0 ROM detected"
+        
+        set_progress "0.75"
+        
+        ui_print "- Installing kernel..."
+        
+        sleep 3
+        
+        if contains "$bootloader" "A520"; then
+            dd if=rise/a5/aosp-t.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
+        elif contains "$bootloader" "A720"; then
+            dd if=rise/a7/aosp-t.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
         fi
     fi
 elif ls /system/build.prop; then

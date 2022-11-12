@@ -1,0 +1,20 @@
+####################################
+# from generate-common-build-props
+# These properties identify this partition image.
+####################################
+ro.product.bootimage.brand=samsung
+ro.product.bootimage.device=a7y17lte
+ro.product.bootimage.manufacturer=samsung
+ro.product.bootimage.model=SM-A720F
+ro.product.bootimage.name=lineage_a7y17lte
+ro.bootimage.build.date=Wed Nov  9 13:18:00 CET 2022
+ro.bootimage.build.date.utc=1667996280
+ro.bootimage.build.fingerprint=samsung/a7y17lteskt/a7y17lteskt:9/PPR1.180610.011/A720SKSU5CUJ2:user/release-keys
+ro.bootimage.build.id=TD1A.221105.001
+ro.bootimage.build.tags=test-keys
+ro.bootimage.build.type=userdebug
+ro.bootimage.build.version.incremental=eng.filipr.20221109.131850
+ro.bootimage.build.version.release=13
+ro.bootimage.build.version.release_or_codename=13
+ro.bootimage.build.version.sdk=33
+# end of file
