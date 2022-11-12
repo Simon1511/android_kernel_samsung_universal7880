@@ -120,33 +120,9 @@ if ls /system/system/build.prop; then
             exit
         fi
 
-        cd /tmp
+        ui_print "- Treble support has been removed from this kernel. Please use version 1.10 if you need the Treble version of this kernel."
 
-        set_progress "0.75"
-
-        if contains "`cat /vendor/build.prop`" "ro.risetreble.version"; then
-            ui_print "- riseTreble-R detected"
-        else
-            ui_print "- riseTreble-Q detected"
-        fi
-
-        ui_print "- Installing kernel..."
-
-        sleep 3
-
-        if contains "`cat /vendor/build.prop`" "ro.risetreble.version"; then
-            if contains "$bootloader" "A520"; then
-                dd if=rise/a5/treble-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
-            elif contains "$bootloader" "A720"; then
-                dd if=rise/a7/treble-r.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
-            fi
-        else
-            if contains "$bootloader" "A520"; then
-                dd if=rise/a5/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
-            elif contains "$bootloader" "A720"; then
-                dd if=rise/a7/treble-q.img of=/dev/block/platform/13540000.dwmmc0/by-name/BOOT bs=4096
-            fi
-        fi
+        exit
 
     # AOSP Q
     elif contains "`cat /system/system/build.prop`" "ro.system.build.version.release=10"; then

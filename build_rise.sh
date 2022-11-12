@@ -195,12 +195,6 @@ BUILD_ALL() {
         BUILD_BOOT "OneUI 10.0" "$i" "y"
         ./cleanup.sh > /dev/null 2>&1
 
-        BUILD_BOOT "Treble 11.0" "$i" "y"
-        ./cleanup.sh > /dev/null 2>&1
-
-        BUILD_BOOT "Treble 10.0" "$i" "y"
-        ./cleanup.sh > /dev/null 2>&1
-
     done
 
     clear
