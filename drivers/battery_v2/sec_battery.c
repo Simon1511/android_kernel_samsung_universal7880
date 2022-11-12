@@ -17,7 +17,7 @@ static int wl_polling = 10;
 module_param(wl_polling, int, 0644);
 
 static unsigned int STORE_MODE_CHARGING_MAX = 85;
-static unsigned int STORE_MODE_CHARGING_MIN = 70;
+static unsigned int STORE_MODE_CHARGING_MIN = 15;
 
 module_param_named(store_mode_max, STORE_MODE_CHARGING_MAX, uint, S_IWUSR | S_IRUGO);
 module_param_named(store_mode_min, STORE_MODE_CHARGING_MIN, uint, S_IWUSR | S_IRUGO);
